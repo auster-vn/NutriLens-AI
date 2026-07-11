@@ -99,12 +99,12 @@ async def security_headers(request: Request, call_next) -> Response:
     return response
 
 
-@app.get("/health", response_model=HealthResponse)
+@app.api_route("/health", methods=["GET", "OPTIONS"], response_model=HealthResponse)
 async def health() -> HealthResponse:
     return HealthResponse(status="ok", version=settings.app_version)
 
 
-@app.get("/", response_model=HealthResponse)
+@app.api_route("/", methods=["GET", "OPTIONS"], response_model=HealthResponse)
 async def root_health() -> HealthResponse:
     return HealthResponse(status="ok", version=settings.app_version)
 
@@ -119,8 +119,10 @@ async def metrics() -> Response:
     return Response(metrics_registry.render_prometheus(), media_type="text/plain; version=0.0.4")
 
 
-@app.get("/health/ready", response_model=HealthResponse)
-async def readiness() -> HealthResponse:
+@app.api_route("/health/ready", methods=["GET", "OPTIONS"], response_model=HealthResponse)
+async def readiness(request: Request) -> HealthResponse:
+    if request.method == "OPTIONS":
+        return HealthResponse(status="ok", version=settings.app_version)
     schema_task = getattr(app.state, "schema_task", None)
     if schema_task and not schema_task.done():
         raise HTTPException(status_code=503, detail="Schema initialization is still running.")
