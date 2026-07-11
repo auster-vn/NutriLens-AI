@@ -9,14 +9,14 @@ import {
 import { useAuth } from "./AuthProvider";
 
 const nav = [
-  { href: "/",             label: "Dashboard",  icon: Home },
-  { href: "/scan",         label: "Scan",        icon: ScanLine },
-  { href: "/compare",      label: "Compare",     icon: GitCompare },
+  { href: "/",             label: "Tổng quan",   icon: Home },
+  { href: "/scan",         label: "Quét mã",     icon: ScanLine },
+  { href: "/compare",      label: "So sánh",     icon: GitCompare },
   { href: "/chat",         label: "Chat AI",     icon: Bot },
-  { href: "/pantry",       label: "Pantry",      icon: PackageSearch },
-  { href: "/favorites",    label: "Favorites",   icon: Heart },
-  { href: "/meal-planner", label: "Meals",       icon: Soup },
-  { href: "/profile",      label: "Profile",     icon: User },
+  { href: "/pantry",       label: "Tủ đồ",      icon: PackageSearch },
+  { href: "/favorites",    label: "Yêu thích",   icon: Heart },
+  { href: "/meal-planner", label: "Bữa ăn",      icon: Soup },
+  { href: "/profile",      label: "Hồ sơ",      icon: User },
   { href: "/admin",        label: "Admin",       icon: ShieldCheck },
 ];
 
