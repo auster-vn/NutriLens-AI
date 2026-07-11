@@ -1,0 +1,20 @@
+FROM python:3.13-slim AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8080
+
+WORKDIR /app
+
+COPY apps/api/requirements.txt /app/apps/api/requirements.txt
+RUN pip install --no-cache-dir -r /app/apps/api/requirements.txt
+
+COPY apps/api /app/apps/api
+
+RUN useradd --create-home --uid 10001 nutrilens \
+    && chown -R nutrilens:nutrilens /app
+USER nutrilens
+
+EXPOSE 8080
+
+CMD ["sh", "-c", "uvicorn app.main:app --app-dir apps/api --host 0.0.0.0 --port ${PORT:-8080}"]
