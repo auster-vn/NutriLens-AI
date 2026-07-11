@@ -20,5 +20,8 @@
     "data:export": "PYTHONPATH=apps/api python -m app.data.cli export-release",
     "data:search": "PYTHONPATH=apps/api python -m app.data.cli search-rag",
     "validate": "npm run lint:api && npm run test:api && npm run lint:web && npm run build:web"
+  },
+  "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.15.12"
   }
 }
