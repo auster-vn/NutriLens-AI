@@ -41,6 +41,16 @@ async def _register(client: AsyncClient, email: str, name: str = "Test User") ->
 
 
 @pytest.mark.asyncio
+async def test_root_health_endpoint_is_available_for_platform_health_checks(isolated_app):
+    client, _ = isolated_app
+
+    response = await client.get("/")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+
+
+@pytest.mark.asyncio
 async def test_registration_creates_cookie_session_and_profile(isolated_app):
     client, _ = isolated_app
     user = await _register(client, "first@example.com")

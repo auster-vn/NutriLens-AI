@@ -1,5 +1,6 @@
+import asyncio
 import logging
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from time import perf_counter
 from uuid import uuid4
 
@@ -26,11 +27,30 @@ from app.rag.router import router as rag_router
 from app.schemas.common import HealthResponse
 
 
+async def initialize_schema_in_background(application: FastAPI) -> None:
+    try:
+        await initialize_schema(engine, settings.database_url)
+    except Exception as exc:  # noqa: BLE001
+        application.state.schema_error = exc
+        logging.getLogger("nutrilens.schema").exception("Schema initialization failed.")
+    else:
+        application.state.schema_ready = True
+
+
 @asynccontextmanager
-async def lifespan(_: FastAPI):
+async def lifespan(application: FastAPI):
     settings.validate_production_secrets()
-    await initialize_schema(engine, settings.database_url)
-    yield
+    application.state.schema_ready = False
+    application.state.schema_error = None
+    schema_task = asyncio.create_task(initialize_schema_in_background(application))
+    application.state.schema_task = schema_task
+    try:
+        yield
+    finally:
+        if not schema_task.done():
+            schema_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await schema_task
 
 
 settings = get_settings()
@@ -84,6 +104,11 @@ async def health() -> HealthResponse:
     return HealthResponse(status="ok", version=settings.app_version)
 
 
+@app.get("/", response_model=HealthResponse)
+async def root_health() -> HealthResponse:
+    return HealthResponse(status="ok", version=settings.app_version)
+
+
 @app.get("/version")
 async def version() -> dict[str, str]:
     return {"version": settings.app_version}
@@ -96,6 +121,12 @@ async def metrics() -> Response:
 
 @app.get("/health/ready", response_model=HealthResponse)
 async def readiness() -> HealthResponse:
+    schema_task = getattr(app.state, "schema_task", None)
+    if schema_task and not schema_task.done():
+        raise HTTPException(status_code=503, detail="Schema initialization is still running.")
+    schema_error = getattr(app.state, "schema_error", None)
+    if schema_error:
+        raise HTTPException(status_code=503, detail="Schema initialization failed.")
     async with engine.connect() as connection:
         await connection.execute(text("select 1"))
     return HealthResponse(status="ready", version=settings.app_version)
