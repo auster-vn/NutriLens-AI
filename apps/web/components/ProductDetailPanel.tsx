@@ -2,19 +2,29 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Heart, PackagePlus } from "lucide-react";
-import { apiFetch, defaultProfile, type Product, type ProductScore, type ProductWithScore } from "@/lib/api";
+import { Heart, PackagePlus, MessageSquare, GitCompare, CheckCircle } from "lucide-react";
+import {
+  apiFetch,
+  defaultProfile,
+  type Product,
+  type ProductScore,
+  type ProductWithScore,
+} from "@/lib/api";
 import { ProductSummary } from "./ProductSummary";
 
 export function ProductDetailPanel({ barcode }: { barcode: string }) {
   const [data, setData] = useState<ProductWithScore | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [pantryMessage, setPantryMessage] = useState("");
+  const [flash, setFlash] = useState<string | null>(null);
+
+  function showFlash(msg: string) {
+    setFlash(msg);
+    setTimeout(() => setFlash(null), 3000);
+  }
 
   async function addToPantry() {
     if (!data) return;
     setError(null);
-    setPantryMessage("");
     try {
       await apiFetch("/api/pantry", {
         method: "POST",
@@ -23,12 +33,12 @@ export function ProductDetailPanel({ barcode }: { barcode: string }) {
           quantity: 1,
           unit: "item",
           expiry_date: null,
-          storage_location: "pantry"
-        })
+          storage_location: "pantry",
+        }),
       });
-      setPantryMessage("Added to pantry");
+      showFlash("Đã thêm vào tủ đồ");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not add product to pantry");
+      setError(err instanceof Error ? err.message : "Không thể thêm vào tủ đồ");
     }
   }
 
@@ -37,9 +47,9 @@ export function ProductDetailPanel({ barcode }: { barcode: string }) {
     setError(null);
     try {
       await apiFetch(`/api/favorites/${data.product.barcode}`, { method: "POST" });
-      setPantryMessage("Saved to favorites");
+      showFlash("Đã lưu vào yêu thích");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save favorite");
+      setError(err instanceof Error ? err.message : "Không thể lưu yêu thích");
     }
   }
 
@@ -55,32 +65,79 @@ export function ProductDetailPanel({ barcode }: { barcode: string }) {
             additives: product.additives,
             nutriscore: product.nutriscore,
             ingredients_text: product.ingredients_text,
-            user_profile: defaultProfile
-          })
+            user_profile: defaultProfile,
+          }),
         });
         setData({ product, score });
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Product lookup failed");
+        setError(err instanceof Error ? err.message : "Tra cứu sản phẩm thất bại");
       }
     }
     void load();
   }, [barcode]);
 
   return (
-    <div className="page">
-      <div>
-        <p className="eyebrow">Product detail</p>
-        <h1>Barcode {barcode}</h1>
+    <div className="page animate-slide-up">
+      {/* Header */}
+      <div className="header">
+        <div>
+          <p className="eyebrow">Chi tiết sản phẩm</p>
+          <h1>{data?.product.name ?? `Mã vạch ${barcode}`}</h1>
+          {data?.product.brand ? (
+            <p className="muted">{data.product.brand} · {barcode}</p>
+          ) : (
+            <p className="muted">{barcode}</p>
+          )}
+        </div>
       </div>
+
+      {/* Error */}
       {error ? <p className="error">{error}</p> : null}
-      <section className="card toolbar">
-        <button className="button" onClick={addToPantry} disabled={!data}><PackagePlus size={18} />Add to pantry</button>
-        <button className="button secondary" onClick={addFavorite} disabled={!data}><Heart size={18} />Save favorite</button>
-        <Link className="button secondary" href={`/compare?barcode=${barcode}`}>Compare with another</Link>
-        <Link className="button secondary" href={`/chat?barcode=${barcode}`}>Ask about this product</Link>
-        {pantryMessage ? <span className="badge">{pantryMessage}</span> : null}
+
+      {/* Flash message */}
+      {flash ? (
+        <div
+          style={{
+            display: "flex", alignItems: "center", gap: 8, padding: "10px 16px",
+            background: "var(--good-bg)", border: "1px solid rgba(16,185,129,0.25)",
+            borderRadius: "var(--r)", color: "var(--good)", fontSize: 13.5, fontWeight: 600,
+          }}
+        >
+          <CheckCircle size={16} />
+          {flash}
+        </div>
+      ) : null}
+
+      {/* Action toolbar */}
+      <section className="card toolbar" style={{ gap: 10 }}>
+        <button className="button" onClick={addToPantry} disabled={!data}>
+          <PackagePlus size={15} />
+          Thêm vào tủ đồ
+        </button>
+        <button className="button secondary" onClick={addFavorite} disabled={!data}>
+          <Heart size={15} />
+          Lưu yêu thích
+        </button>
+        <Link className="button secondary" href={`/compare?barcode=${barcode}`}>
+          <GitCompare size={15} />
+          So sánh
+        </Link>
+        <Link className="button secondary" href={`/chat?barcode=${barcode}`}>
+          <MessageSquare size={15} />
+          Hỏi AI
+        </Link>
       </section>
-      {data ? <ProductSummary data={data} /> : <section className="card"><p className="muted">Loading product data...</p></section>}
+
+      {/* Product data */}
+      {data ? (
+        <ProductSummary data={data} />
+      ) : !error ? (
+        <section className="card">
+          <div className="loading-state" style={{ minHeight: 120 }}>
+            Đang tải dữ liệu sản phẩm…
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

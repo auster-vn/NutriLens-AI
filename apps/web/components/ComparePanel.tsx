@@ -47,32 +47,83 @@ export function ComparePanel() {
   }
 
   return (
-    <div className="page">
-      <div>
-        <p className="eyebrow">Product comparison</p>
-        <h1>Choose the better fit</h1>
-        <p className="muted">Recommendation changes by goal, while raw nutrition values stay visible.</p>
+    <div className="page animate-slide-up">
+      <div className="header">
+        <div>
+          <p className="eyebrow">So sánh sản phẩm</p>
+          <h1>Chọn sản phẩm phù hợp hơn</h1>
+          <p className="muted">Khuyến nghị thay đổi theo mục tiêu, trong khi giá trị dinh dưỡng luôn hiển thị.</p>
+        </div>
       </div>
-      <section className="card toolbar">
-        <label className="field" style={{ flex: "1 1 180px" }}><span>Product A barcode</span><input value={barcodeA} onChange={(event) => setBarcodeA(event.target.value)} /></label>
-        <label className="field" style={{ flex: "1 1 180px" }}><span>Product B barcode</span><input value={barcodeB} onChange={(event) => setBarcodeB(event.target.value)} /></label>
-        <label className="field" style={{ flex: "0 1 180px" }}><span>Goal</span><select value={goal} onChange={(event) => setGoal(event.target.value)}><option value="low_sugar">Low sugar</option><option value="low_sodium">Low sodium</option><option value="high_protein">High protein</option><option value="weight_loss">Weight loss</option><option value="general">General</option></select></label>
-        <button className="button" onClick={compare} disabled={loading}><GitCompare size={18} />{loading ? "Comparing" : "Compare"}</button>
+      <section className="card">
+        <div className="toolbar" style={{ gap: 12 }}>
+          <label className="field" style={{ flex: "1 1 180px" }}>
+            <span>Mã vạch sản phẩm A</span>
+            <input value={barcodeA} onChange={(e) => setBarcodeA(e.target.value)} placeholder="e.g. 737628064502" />
+          </label>
+          <label className="field" style={{ flex: "1 1 180px" }}>
+            <span>Mã vạch sản phẩm B</span>
+            <input value={barcodeB} onChange={(e) => setBarcodeB(e.target.value)} placeholder="e.g. 3017620422003" />
+          </label>
+          <label className="field" style={{ flex: "0 1 180px" }}>
+            <span>Mục tiêu</span>
+            <select value={goal} onChange={(e) => setGoal(e.target.value)}>
+              <option value="low_sugar">Ít đường</option>
+              <option value="low_sodium">Ít natri</option>
+              <option value="high_protein">Nhiều protein</option>
+              <option value="weight_loss">Giảm cân</option>
+              <option value="general">Tổng quát</option>
+            </select>
+          </label>
+          <button className="button" onClick={compare} disabled={loading} style={{ alignSelf: "flex-end" }}>
+            <GitCompare size={16} />
+            {loading ? "Đang so sánh…" : "So sánh"}
+          </button>
+        </div>
+        {error ? <p className="error" style={{ marginTop: 10 }}>{error}</p> : null}
       </section>
-      {error ? <p className="error">{error}</p> : null}
+
       {result ? (
         <>
           <section className="card">
-            <h2>Recommendation</h2>
-            <p>{result.recommendation}</p>
-            <NutritionChart data={result.dimensions.map((row) => ({ label: row.label, a: row.a, b: row.b }))} mode="compare" />
-            <table className="table">
-              <thead><tr><th>Dimension</th><th>A</th><th>B</th></tr></thead>
-              <tbody>{result.dimensions.map((row) => <tr key={row.key}><td>{row.label}</td><td>{row.a ?? "Missing"}</td><td>{row.b ?? "Missing"}</td></tr>)}</tbody>
+            <p className="eyebrow">Phân tích AI</p>
+            <h2 style={{ marginBottom: 8 }}>Khuyến nghị</h2>
+            <p style={{ fontSize: 14, lineHeight: 1.7, color: "var(--ink-2)" }}>{result.recommendation}</p>
+            <div style={{ marginTop: 16 }}>
+              <NutritionChart
+                data={result.dimensions.map((row) => ({ label: row.label, a: row.a, b: row.b }))}
+                mode="compare"
+              />
+            </div>
+            <table className="table" style={{ marginTop: 16 }}>
+              <thead>
+                <tr>
+                  <th>Chỉ số</th>
+                  <th>Sản phẩm A</th>
+                  <th>Sản phẩm B</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.dimensions.map((row) => (
+                  <tr key={row.key}>
+                    <td style={{ fontWeight: 500 }}>{row.label}</td>
+                    <td style={{ fontWeight: 600 }}>{row.a ?? <span className="muted">–</span>}</td>
+                    <td style={{ fontWeight: 600 }}>{row.b ?? <span className="muted">–</span>}</td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </section>
-          <ProductSummary data={result.product_a} />
-          <ProductSummary data={result.product_b} />
+          <div className="grid two">
+            <div>
+              <p className="eyebrow" style={{ marginBottom: 8 }}>Sản phẩm A</p>
+              <ProductSummary data={result.product_a} />
+            </div>
+            <div>
+              <p className="eyebrow" style={{ marginBottom: 8 }}>Sản phẩm B</p>
+              <ProductSummary data={result.product_b} />
+            </div>
+          </div>
         </>
       ) : null}
     </div>
