@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     loading,
     login: (input) => authenticate("/api/auth/login", input),
-    register: (input) => authenticate("/api/auth/register", input),
+    register: (input) => authenticate("/api/auth/signup", input),
     enterDemo: () => authenticate("/api/auth/demo"),
     logout: async () => {
       await apiFetch<void>("/api/auth/logout", { method: "POST" });

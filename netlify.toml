@@ -11,12 +11,12 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://nutrilens-asww8ucz.b4a.run/api/:splat"
+  to = "https://nutrilens-ai-zc6y.onrender.com/api/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/health/*"
-  to = "https://nutrilens-asww8ucz.b4a.run/health/:splat"
+  to = "https://nutrilens-ai-zc6y.onrender.com/health/:splat"
   status = 200
   force = true

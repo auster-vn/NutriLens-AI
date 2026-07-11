@@ -39,6 +39,7 @@ def _set_session_cookie(response: Response, user: User) -> AuthSession:
 
 
 @router.post("/register", response_model=AuthSession, status_code=201)
+@router.post("/signup", response_model=AuthSession, status_code=201)
 async def register(
     request: RegisterRequest,
     response: Response,
