@@ -8,6 +8,24 @@ export type UserProfile = {
   diet?: string | null;
   disliked_ingredients: string[];
   budget_daily?: number | null;
+  biological_sex?: "male" | "female" | null;
+  age?: number | null;
+  height_cm?: number | null;
+  weight_kg?: number | null;
+  activity_level?: "sedentary" | "light" | "moderate" | "very_active" | "extra_active" | null;
+  target_weight_loss_kg_week?: number | null;
+};
+
+export type TdeeResult = {
+  bmr_kcal: number;
+  tdee_kcal: number;
+  requested_deficit_kcal: number;
+  recommended_deficit_kcal: number;
+  target_calories_kcal: number;
+  maintenance_range_kcal: [number, number];
+  recommended_loss_kg_week: number;
+  activity_factor: number;
+  warnings: string[];
 };
 
 export type Product = {

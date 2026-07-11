@@ -38,6 +38,12 @@ async def scan_product(
                 diet=stored_profile.diet,
                 disliked_ingredients=stored_profile.disliked_ingredients or [],
                 budget_daily=stored_profile.budget_daily,
+                biological_sex=stored_profile.biological_sex,
+                age=stored_profile.age,
+                height_cm=stored_profile.height_cm,
+                weight_kg=stored_profile.weight_kg,
+                activity_level=stored_profile.activity_level,
+                target_weight_loss_kg_week=stored_profile.target_weight_loss_kg_week,
             )
     profile = profile or UserProfileInput()
     product = await get_or_fetch_product(session, barcode)

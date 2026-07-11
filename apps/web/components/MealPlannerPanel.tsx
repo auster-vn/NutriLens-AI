@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AlertTriangle, PackageSearch, Soup, Target, WalletCards } from "lucide-react";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, type TdeeResult, type UserProfile } from "@/lib/api";
 
 type PlannedMeal = { type: string; label: string; name: string; calories_kcal: number; protein_g: number; fiber_g: number; estimated_cost_vnd: number; reason: string; pantry_matches: string[] };
 type PlannedDay = { day: number; meals: PlannedMeal[] };
@@ -41,6 +41,21 @@ export function MealPlannerPanel() {
     } catch (err) { setError(err instanceof Error ? err.message : "Không thể đọc pantry"); }
   }
 
+  async function importTdeeTarget() {
+    setError(null);
+    try {
+      const profile = await apiFetch<UserProfile>("/api/profile");
+      const recommendation = await apiFetch<TdeeResult>("/api/profile/tdee", {
+        method: "POST",
+        body: JSON.stringify(profile),
+      });
+      setTargetCalories(recommendation.target_calories_kcal);
+      if (profile.goal) setGoal(profile.goal);
+      if (profile.diet) setDiet(profile.diet);
+      if (profile.budget_daily) setBudget(profile.budget_daily * days);
+    } catch (err) { setError(err instanceof Error ? err.message : "Không thể tính TDEE từ hồ sơ"); }
+  }
+
   return <div className="page animate-slide-up">
     <div className="header"><div><p className="eyebrow">Lập kế hoạch bữa ăn</p><h1>Thực đơn theo mục tiêu</h1><p className="muted">Tạo thực đơn đa dạng, lọc dị ứng và gom nguyên liệu thành danh sách mua sắm thực tế.</p></div></div>
     <section className="card grid">
@@ -52,7 +67,7 @@ export function MealPlannerPanel() {
         <label className="field"><span>Chế độ ăn</span><select value={diet} onChange={(e) => setDiet(e.target.value)}><option value="general">Không giới hạn</option><option value="vegetarian">Ăn chay có trứng/sữa</option><option value="vegan">Thuần thực vật</option><option value="pescatarian">Có cá, không thịt</option></select></label>
       </div>
       <label className="field"><span>Nguyên liệu cần tránh (phân cách bằng dấu phẩy)</span><input value={excluded} onChange={(e) => setExcluded(e.target.value)} placeholder="ví dụ: đậu phộng, sữa, tôm" /></label>
-      <div className="toolbar"><button className="button secondary" onClick={() => void importPantry()}><PackageSearch size={16} />Dùng nguyên liệu trong tủ</button><button className="button" onClick={() => void generate()} disabled={loading}><Soup size={16} />{loading ? "Đang tối ưu…" : "Tạo thực đơn"}</button></div>
+      <div className="toolbar"><button className="button secondary" onClick={() => void importTdeeTarget()}><Target size={16} />Dùng target từ TDEE</button><button className="button secondary" onClick={() => void importPantry()}><PackageSearch size={16} />Dùng nguyên liệu trong tủ</button><button className="button" onClick={() => void generate()} disabled={loading}><Soup size={16} />{loading ? "Đang tối ưu…" : "Tạo thực đơn"}</button></div>
       {availableItems.length ? <div className="toolbar">{availableItems.map((item) => <span className="badge" key={item}>{item}</span>)}</div> : null}
       {error ? <p className="error">{error}</p> : null}
     </section>

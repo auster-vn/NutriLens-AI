@@ -72,6 +72,12 @@ class UserProfile(Base):
     diet: Mapped[str | None] = mapped_column(String(32))
     disliked_ingredients: Mapped[list[str]] = mapped_column(JSON, default=list)
     budget_daily: Mapped[float | None] = mapped_column(Float)
+    biological_sex: Mapped[str | None] = mapped_column(String(16))
+    age: Mapped[int | None] = mapped_column(Integer)
+    height_cm: Mapped[float | None] = mapped_column(Float)
+    weight_kg: Mapped[float | None] = mapped_column(Float)
+    activity_level: Mapped[str | None] = mapped_column(String(32))
+    target_weight_loss_kg_week: Mapped[float | None] = mapped_column(Float)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 

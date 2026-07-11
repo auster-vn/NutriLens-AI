@@ -4,8 +4,27 @@
   "description": "Barcode nutrition intelligence and grounded nutrition assistant",
   "start_url": "/scan",
   "display": "standalone",
+  "orientation": "portrait-primary",
+  "categories": ["health", "food", "utilities"],
   "background_color": "#f6f7f4",
   "theme_color": "#13795b",
+  "shortcuts": [
+    {
+      "name": "Quét mã vạch",
+      "short_name": "Quét mã",
+      "url": "/scan"
+    },
+    {
+      "name": "Hỏi NutriLens AI",
+      "short_name": "Chat AI",
+      "url": "/chat"
+    },
+    {
+      "name": "Lập kế hoạch bữa ăn",
+      "short_name": "Bữa ăn",
+      "url": "/meal-planner"
+    }
+  ],
   "icons": [
     {
       "src": "/icon.svg",

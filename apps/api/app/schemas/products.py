@@ -8,6 +8,27 @@ class UserProfileInput(BaseModel):
     diet: str | None = None
     disliked_ingredients: list[str] = Field(default_factory=list)
     budget_daily: float | None = None
+    biological_sex: str | None = Field(default=None, pattern="^(male|female)$")
+    age: int | None = Field(default=None, ge=18, le=100)
+    height_cm: float | None = Field(default=None, ge=120, le=230)
+    weight_kg: float | None = Field(default=None, ge=30, le=350)
+    activity_level: str | None = Field(
+        default=None,
+        pattern="^(sedentary|light|moderate|very_active|extra_active)$",
+    )
+    target_weight_loss_kg_week: float | None = Field(default=None, ge=0, le=1.5)
+
+
+class TdeeResult(BaseModel):
+    bmr_kcal: int
+    tdee_kcal: int
+    requested_deficit_kcal: int
+    recommended_deficit_kcal: int
+    target_calories_kcal: int
+    maintenance_range_kcal: tuple[int, int]
+    recommended_loss_kg_week: float
+    activity_factor: float
+    warnings: list[str] = Field(default_factory=list)
 
 
 class ProductOut(BaseModel):

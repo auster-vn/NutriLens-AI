@@ -22,9 +22,21 @@ SQLITE_COMPAT_MIGRATIONS = [
     "create index if not exists ix_rag_chunks_release_source on rag_chunks(release_id, source_filename)",
     "create index if not exists ix_rag_chunks_content_hash on rag_chunks(content_hash)",
     "create index if not exists ix_rag_evaluation_runs_release_created on rag_evaluation_runs(release_id, created_at)",
+    "alter table user_profiles add column biological_sex VARCHAR(16)",
+    "alter table user_profiles add column age INTEGER",
+    "alter table user_profiles add column height_cm FLOAT",
+    "alter table user_profiles add column weight_kg FLOAT",
+    "alter table user_profiles add column activity_level VARCHAR(32)",
+    "alter table user_profiles add column target_weight_loss_kg_week FLOAT",
 ]
 
 POSTGRES_VECTOR_BOOTSTRAP = [
+    "alter table user_profiles add column if not exists biological_sex VARCHAR(16)",
+    "alter table user_profiles add column if not exists age INTEGER",
+    "alter table user_profiles add column if not exists height_cm DOUBLE PRECISION",
+    "alter table user_profiles add column if not exists weight_kg DOUBLE PRECISION",
+    "alter table user_profiles add column if not exists activity_level VARCHAR(32)",
+    "alter table user_profiles add column if not exists target_weight_loss_kg_week DOUBLE PRECISION",
     "create extension if not exists vector",
     "alter table rag_chunks add column if not exists embedding_vector vector(256)",
     """
