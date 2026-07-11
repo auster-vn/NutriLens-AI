@@ -1,0 +1,5 @@
+{"id":"everyday_egg_001","question":"Ăn trứng có tốt không?","expected_route":"rag","expected_sources":["eggs_and_health.md"],"required_facts":["protein"],"should_abstain":false}
+{"id":"everyday_egg_002","question":"Người cholesterol cao có nên ăn trứng mỗi ngày?","expected_route":"rag","expected_sources":["eggs_and_health.md"],"required_facts":["cholesterol"],"should_abstain":false}
+{"id":"everyday_fish_001","question":"Nên ăn cá như thế nào để tốt cho sức khỏe?","expected_route":"rag","expected_sources":["fish_and_seafood.md"],"required_facts":["protein"],"should_abstain":false}
+{"id":"everyday_breakfast_001","question":"Yogurt và yến mạch có phù hợp cho bữa sáng không?","expected_route":"rag","expected_sources":["breakfast_yogurt_oats_fruit.md"],"required_facts":["protein","fiber"],"should_abstain":false}
+{"id":"everyday_coffee_001","question":"Uống cà phê mỗi ngày có sao không?","expected_route":"rag","expected_sources":["coffee_and_caffeine.md"],"required_facts":["400"],"should_abstain":false}

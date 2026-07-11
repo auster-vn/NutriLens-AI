@@ -35,6 +35,27 @@ NUTRITION_TERMS = {
     "nutrition",
     "dinh",
     "dưỡng",
+    "trứng",
+    "egg",
+    "cá",
+    "fish",
+    "sữa",
+    "yogurt",
+    "chua",
+    "yến",
+    "mạch",
+    "oat",
+    "trái",
+    "cây",
+    "fruit",
+    "thịt",
+    "meat",
+    "cà",
+    "phê",
+    "coffee",
+    "tốt",
+    "ăn",
+    "uống",
 }
 
 
@@ -96,7 +117,7 @@ def answer_question(
     if passages and passages[0].score < 4:
         passages = []
     elif passages:
-        relative_threshold = max(4, passages[0].score * 0.8)
+        relative_threshold = max(4, passages[0].score * 0.7)
         passages = [passage for passage in passages if passage.score >= relative_threshold]
     citations = [_citation(passage.document, passage.paragraph) for passage in passages[:3]]
     route = classify_route(question, barcode)
@@ -130,7 +151,7 @@ def answer_question(
 
 def classify_route(question: str, barcode: str | None = None) -> str:
     lowered = question.lower()
-    product_terms = {"sản phẩm này", "barcode", "allergen", "dị ứng", "dùng được", "phù hợp", "nutri-score"}
+    product_terms = {"sản phẩm này", "barcode", "allergen", "dị ứng", "nutri-score"}
     concept_terms = {"là gì", "nghĩa là", "vì sao", "hướng dẫn", "khuyến nghị", "cao có sao"}
     if barcode:
         return "mixed"

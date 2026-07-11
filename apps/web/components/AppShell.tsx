@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3, Bot, GitCompare, Heart, Home, LogIn, LogOut,
-  PackageSearch, ScanLine, ShieldCheck, Soup, User
+  PackageSearch, ScanLine, Soup, User
 } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 
@@ -17,7 +17,6 @@ const nav = [
   { href: "/favorites",    label: "Yêu thích",   icon: Heart },
   { href: "/meal-planner", label: "Bữa ăn",      icon: Soup },
   { href: "/profile",      label: "Hồ sơ",      icon: User },
-  { href: "/admin",        label: "Admin",       icon: ShieldCheck },
 ];
 
 const protectedRoutes = ["/pantry", "/favorites", "/meal-planner", "/profile"];
@@ -25,6 +24,15 @@ const protectedRoutes = ["/pantry", "/favorites", "/meal-planner", "/profile"];
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, loading, logout } = useAuth();
+  if (pathname.startsWith("/admin")) {
+    return <div className="admin-workspace">
+      <header className="admin-topbar">
+        <Link href="/admin" className="admin-brand"><BarChart3 size={18} />NutriLens Control Plane</Link>
+        <div className="admin-topbar-actions"><span>Knowledge & Data Operations</span><Link href="/" className="button secondary">Về ứng dụng</Link></div>
+      </header>
+      <main className="admin-main">{children}</main>
+    </div>;
+  }
   const protectedRoute = protectedRoutes.some((r) => pathname.startsWith(r));
 
   const initials = user?.display_name

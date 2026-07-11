@@ -49,7 +49,8 @@ async def test_refresh_updates_cache_timestamp():
         result = await get_or_fetch_product(session, product.barcode)
 
     assert result.name == "Fresh product"
-    assert result.cached_at > previous_cached_at
+    # SQLAlchemy DateTime is timezone-naive in both SQLite and PostgreSQL.
+    assert result.cached_at > previous_cached_at.replace(tzinfo=None)
     session.commit.assert_awaited_once()
 
 

@@ -23,7 +23,16 @@ class HybridRetriever:
         self.semantic_weight = semantic_weight
         self._tokens = [
             tokenize(
-                " ".join((chunk.source_title, *chunk.heading_path, chunk.content)),
+                " ".join(
+                    (
+                        chunk.source_title,
+                        chunk.source_title,
+                        chunk.source_title,
+                        *chunk.heading_path,
+                        *chunk.heading_path,
+                        chunk.content,
+                    )
+                ),
                 remove_stop_words=True,
             )
             for chunk in chunks
@@ -39,7 +48,13 @@ class HybridRetriever:
         lexical_scores = [self._bm25(query_tokens, index) for index in range(len(self.chunks))]
         semantic_scores = [cosine_similarity(query_embedding, chunk.embedding) for chunk in self.chunks]
         lexical_order = sorted(range(len(self.chunks)), key=lambda index: lexical_scores[index], reverse=True)
-        semantic_order = sorted(range(len(self.chunks)), key=lambda index: semantic_scores[index], reverse=True)
+        # Semantic similarity refines grounded lexical candidates. Feature-hash
+        # collisions must not introduce unrelated chunks as evidence.
+        semantic_order = sorted(
+            (index for index, score in enumerate(lexical_scores) if score > 0),
+            key=lambda index: semantic_scores[index],
+            reverse=True,
+        )
         lexical_ranks = {index: rank for rank, index in enumerate(lexical_order, start=1) if lexical_scores[index] > 0}
         semantic_ranks = {
             index: rank for rank, index in enumerate(semantic_order, start=1) if semantic_scores[index] > 0

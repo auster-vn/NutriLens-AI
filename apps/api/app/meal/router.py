@@ -4,26 +4,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.security import get_current_user
 from app.core.database import get_session
-from app.core.models import MealPlan, User
+from app.core.models import MealPlan, User, UserProfile
+from app.meal.planner import build_meal_plan
 from app.schemas.meal import MealPlanOut, MealPlanRequest
 
 router = APIRouter(prefix="/api/meal-plan", tags=["meal-plan"])
-
-BASE_MEALS = [
-    {"name": "Yogurt + yến mạch + trái cây", "tags": ["high_protein", "low_sugar"], "uses": ["yogurt", "oat", "fruit"]},
-    {
-        "name": "Cơm gạo lứt + trứng + rau luộc",
-        "tags": ["general", "weight_loss"],
-        "uses": ["rice", "egg", "vegetable"],
-    },
-    {"name": "Đậu hũ sốt cà chua + rau xanh", "tags": ["vegetarian", "vegan"], "uses": ["tofu", "tomato", "vegetable"]},
-    {
-        "name": "Ức gà áp chảo + khoai lang",
-        "tags": ["high_protein", "weight_loss"],
-        "uses": ["chicken", "sweet potato"],
-    },
-    {"name": "Súp rau củ + đậu", "tags": ["low_sodium", "vegan"], "uses": ["bean", "vegetable"]},
-]
 
 
 @router.post("/generate", response_model=MealPlanOut)
@@ -32,44 +17,29 @@ async def generate_meal_plan(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> MealPlanOut:
-    matching = [meal for meal in BASE_MEALS if request.goal in meal["tags"]]
-    pool = matching or BASE_MEALS
-    if request.available_items:
-        pantry_terms = {item.lower() for item in request.available_items}
-        pantry_matches = [
-            meal
-            for meal in pool
-            if any(term in " ".join(meal["uses"]).lower() or term in meal["name"].lower() for term in pantry_terms)
-        ]
-        pool = pantry_matches + [meal for meal in pool if meal not in pantry_matches]
-    meals = [
-        {
-            "day": day,
-            "breakfast": pool[(day - 1) % len(pool)]["name"],
-            "lunch": pool[day % len(pool)]["name"],
-            "dinner": pool[(day + 1) % len(pool)]["name"],
-        }
-        for day in range(1, request.days + 1)
-    ]
-    shopping_list = [
-        {"item": "Rau xanh", "quantity": f"{request.days * 300}g"},
-        {"item": "Nguồn protein chính", "quantity": f"{request.days} phần"},
-        {"item": "Trái cây ít đường", "quantity": f"{request.days} phần"},
-    ]
-    warnings = ["Ước tính dinh dưỡng là rule-based; cần dữ liệu sản phẩm cụ thể để chính xác hơn."]
-    if request.excluded_ingredients:
-        warnings.append("Đã ghi nhận nguyên liệu cần tránh: " + ", ".join(request.excluded_ingredients))
-    if request.available_items:
-        warnings.append("Đã ưu tiên nguyên liệu đang có trong pantry: " + ", ".join(request.available_items[:6]))
-    plan_payload = {
-        "days": request.days,
-        "budget": request.budget,
-        "goal": request.goal,
-        "meals": meals,
-        "shopping_list": shopping_list,
-        "estimated_nutrition": {"protein": "moderate", "sugar": "controlled", "fiber": "good"},
-        "warnings": warnings,
-    }
+    profile = await session.get(UserProfile, user.id)
+    excluded = list(
+        dict.fromkeys(
+            [
+                *request.excluded_ingredients,
+                *(profile.allergies if profile else []),
+                *(profile.disliked_ingredients if profile else []),
+            ]
+        )
+    )
+    try:
+        plan_payload = build_meal_plan(
+            days=request.days,
+            goal=request.goal,
+            budget=request.budget,
+            diet=request.diet or (profile.diet if profile else None),
+            excluded=excluded,
+            available=request.available_items,
+            meals_per_day=request.meals_per_day,
+            target_calories=request.target_calories,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     meal_plan = MealPlan(
         user_id=user.id,
         days=request.days,

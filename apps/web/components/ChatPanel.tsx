@@ -34,13 +34,14 @@ type Message = {
 };
 
 const suggestions = [
-  "Đường cao trong sản phẩm nghĩa là gì?",
-  "Chất bảo quản nào an toàn cho trẻ em?",
-  "Sản phẩm ít natri là như thế nào?",
+  "Ăn trứng có tốt không?",
+  "Nên ăn cá bao nhiêu lần mỗi tuần?",
+  "Yogurt và yến mạch có phù hợp cho bữa sáng?",
+  "Uống cà phê mỗi ngày có sao không?",
 ];
 
 export function ChatPanel() {
-  const [question, setQuestion] = useState("Đường cao trong sản phẩm nghĩa là gì?");
+  const [question, setQuestion] = useState("Ăn trứng có tốt không?");
   const [barcode, setBarcode] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string | null>(null);

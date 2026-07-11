@@ -1169,6 +1169,35 @@ textarea {
   min-height: 240px;
 }
 
+.meal-settings { display: grid; grid-template-columns: 90px repeat(4, minmax(150px, 1fr)); gap: 12px; }
+.meal-plan-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(270px, .8fr); gap: 16px; align-items: start; }
+.meal-days { display: grid; gap: 12px; }
+.meal-day { padding: 0; overflow: hidden; }
+.meal-day-heading { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg-2); font-weight: 700; }
+.meal-day-heading small { color: var(--muted); font-weight: 600; }
+.meal-slot-list { display: grid; }
+.meal-slot { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; padding: 15px 16px; border-top: 1px solid var(--line); }
+.meal-slot:first-child { border-top: 0; }
+.meal-slot h3 { margin: 2px 0 3px; font-size: 14px; }
+.meal-slot p { margin: 0; color: var(--muted); font-size: 12px; }
+.meal-macros { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.meal-macros span { padding: 3px 7px; background: var(--bg-2); color: var(--muted); border-radius: var(--r-sm); font-size: 11px; white-space: nowrap; }
+.shopping-panel { position: sticky; top: 18px; }
+.shopping-panel .list li { display: flex; justify-content: space-between; gap: 12px; }
+.shopping-panel .list strong { white-space: nowrap; font-size: 12px; }
+.notice { display: flex; gap: 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--r); }
+.notice.warning { color: var(--warn); background: var(--warn-bg); }
+.notice p { margin: 3px 0 0; }
+
+.admin-workspace { min-height: 100vh; background: var(--bg); }
+.admin-topbar { position: sticky; top: 0; z-index: 120; min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 28px; border-bottom: 1px solid var(--line); background: var(--panel-solid); }
+.admin-brand { display: flex; align-items: center; gap: 9px; color: var(--green); font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; }
+.admin-topbar-actions { display: flex; align-items: center; gap: 16px; color: var(--muted); font-size: 12px; }
+.admin-main { width: min(1500px, 100%); margin: 0 auto; padding: 24px 28px 60px; }
+.admin-page { display: grid; gap: 16px; }
+.admin-heading { display: flex; flex-direction: column; justify-content: center; min-height: 90px; border-bottom: 1px solid var(--line); }
+.admin-heading h1 { margin-bottom: 4px; }
+
 /* ─── Expiry Badges ──────────────────────────────────────────── */
 .expiry-expired,
 .expiry-urgent {
@@ -1274,6 +1303,9 @@ textarea {
   .metric { border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); }
   .metric:nth-child(2n) { border-right: 0; }
   .product-grid { grid-template-columns: repeat(2, 1fr); }
+  .meal-settings { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .meal-plan-layout { grid-template-columns: 1fr; }
+  .shopping-panel { position: static; }
 
   h1 { font-size: 24px; }
 }
@@ -1282,4 +1314,10 @@ textarea {
   .product-grid { grid-template-columns: 1fr; }
   .metric-grid { grid-template-columns: repeat(2, 1fr); }
   .auth-intro h1 { font-size: 26px; }
+  .meal-settings { grid-template-columns: 1fr; }
+  .meal-slot { grid-template-columns: 1fr; }
+  .meal-macros { justify-content: flex-start; }
+  .admin-topbar { padding: 8px 14px; }
+  .admin-topbar-actions > span { display: none; }
+  .admin-main { padding: 18px 14px 40px; }
 }

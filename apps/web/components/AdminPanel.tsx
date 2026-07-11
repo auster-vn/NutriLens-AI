@@ -142,11 +142,11 @@ export function AdminPanel() {
   }
 
   return (
-    <div className="page">
-      <div>
+    <div className="admin-page">
+      <div className="admin-heading">
         <p className="eyebrow">Admin studio</p>
-        <h1>Manage approved knowledge</h1>
-        <p className="muted">Upload, preview, delete, and audit knowledge documents.</p>
+        <h1>Knowledge & Data Control Plane</h1>
+        <p className="muted">Quản trị corpus, release, evaluation gate, pipeline lineage và health metrics tại một khu vực độc lập.</p>
       </div>
       <section className="card grid">
         <label className="field">

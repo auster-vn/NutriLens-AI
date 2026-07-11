@@ -40,6 +40,8 @@ TOKEN_ALIASES = {
     "muoi": {"salt", "sodium"},
     "xơ": {"fiber"},
     "xo": {"fiber"},
+    "cá": {"fish"},
+    "ca": {"fish"},
     "béo": {"fat"},
     "beo": {"fat"},
     "dị": {"allergen", "allergy"},
@@ -57,7 +59,11 @@ TOKEN_ALIASES = {
 
 
 def tokenize(text: str, *, remove_stop_words: bool = False, expand_aliases: bool = False) -> list[str]:
-    tokens = [token.lower() for token in TOKEN_PATTERN.findall(text) if len(token) >= 3]
+    tokens = [
+        token.lower()
+        for token in TOKEN_PATTERN.findall(text)
+        if len(token) >= 3 or token.lower() in TOKEN_ALIASES
+    ]
     if remove_stop_words:
         tokens = [token for token in tokens if token not in RANK_STOP_WORDS]
     if expand_aliases:

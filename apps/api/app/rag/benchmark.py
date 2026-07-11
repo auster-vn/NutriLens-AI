@@ -9,6 +9,7 @@ CORE_BENCHMARK_FILES = (
     "mixed_product_rag_questions.jsonl",
     "abstain_cases.jsonl",
     "rag_benchmark_v2.jsonl",
+    "everyday_food_questions.jsonl",
 )
 
 
