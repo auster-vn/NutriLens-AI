@@ -10,6 +10,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
+def utc_now_naive() -> datetime:
+    return datetime.now(UTC).replace(tzinfo=None)
+
+
 def product_to_schema(product: ProductCache) -> ProductOut:
     return ProductOut(
         barcode=product.barcode,
@@ -40,7 +44,7 @@ async def upsert_product(session: AsyncSession, data: dict) -> ProductCache:
     else:
         for key, value in data.items():
             setattr(product, key, value)
-    product.cached_at = datetime.now(UTC)
+    product.cached_at = utc_now_naive()
     await session.commit()
     await session.refresh(product)
     return product

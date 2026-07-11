@@ -1,4 +1,11 @@
 from app.products.openfoodfacts import normalize_open_food_facts
+from app.products.service import utc_now_naive
+
+
+def test_product_cache_timestamp_is_postgres_compatible():
+    timestamp = utc_now_naive()
+
+    assert timestamp.tzinfo is None
 
 
 def test_normalize_open_food_facts_keeps_only_raw_summary():
