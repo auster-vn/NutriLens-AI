@@ -1,0 +1,10 @@
+{"id":"protein_002","question":"Protein giúp ích gì cho cơ thể?","expected_route":"rag","expected_sources":["protein_basics.md"],"required_facts":["protein"],"should_abstain":false}
+{"id":"fiber_001","question":"Chất xơ trên nhãn dinh dưỡng có ý nghĩa gì?","expected_route":"rag","expected_sources":["fiber_and_whole_grains.md"],"required_facts":["fiber_100g"],"should_abstain":false}
+{"id":"fat_001","question":"Chất béo bão hòa cao có sao không?","expected_route":"rag","expected_sources":["saturated_fat.md"],"required_facts":["saturated-fat_100g"],"should_abstain":false}
+{"id":"label_001","question":"Nên đọc và so sánh nhãn dinh dưỡng như thế nào?","expected_route":"rag","expected_sources":["nutrition_label_reading.md"],"required_facts":["100g"],"should_abstain":false}
+{"id":"vegan_001","question":"Vegan và vegetarian khác nhau thế nào về sữa và trứng?","expected_route":"rag","expected_sources":["vegetarian_vegan_nutrition.md"],"required_facts":["milk","eggs"],"should_abstain":false}
+{"id":"additives_001","question":"Phụ gia thực phẩm trên danh sách thành phần nghĩa là gì?","expected_route":"rag","expected_sources":["food_additives.md"],"should_abstain":false}
+{"id":"storage_001","question":"Thực phẩm gần hết hạn và bảo quản không an toàn nên xử lý sao?","expected_route":"rag","expected_sources":["food_safety_storage.md"],"required_facts":["expiry"],"should_abstain":false}
+{"id":"nutriscore_001","question":"Nutri-Score là gì và dùng để so sánh thế nào?","expected_route":"mixed","expected_sources":["nutriscore_explained.md"],"required_facts":["nutri-score"],"should_abstain":false}
+{"id":"allergen_002","question":"Tôi dị ứng gluten, cần kiểm tra gì trên nhãn?","expected_route":"product","expected_sources":["food_allergens.md"],"required_facts":["allergen"],"should_abstain":false}
+{"id":"unknown_002","question":"Hợp chất QP-442 có giúp tôi bay được không?","expected_route":"rag","should_abstain":true}

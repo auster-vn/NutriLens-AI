@@ -1,0 +1,2 @@
+{"id":"sugar_001","question":"Đường cao trong sản phẩm nghĩa là gì?","expected_route":"rag","expected_sources":["sugar_guidance.md"],"required_facts":["đường","hạn chế","nhãn dinh dưỡng"],"should_abstain":false}
+{"id":"sodium_001","question":"Sodium và muối khác nhau thế nào?","expected_route":"rag","expected_sources":["sodium_and_blood_pressure.md"],"required_facts":["sodium","salt","2.5"],"should_abstain":false}

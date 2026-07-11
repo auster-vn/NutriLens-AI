@@ -1,0 +1,24 @@
+{
+  "name": "nutrilens-ai",
+  "private": true,
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace apps/web run dev",
+    "build:web": "npm --workspace apps/web run build",
+    "lint:web": "npm --workspace apps/web run lint",
+    "test:e2e": "npm --workspace apps/web run test:e2e",
+    "dev:api": "uvicorn app.main:app --app-dir apps/api --reload --port 8000",
+    "test:api": "pytest",
+    "lint:api": "ruff check apps/api",
+    "data:ingest": "PYTHONPATH=apps/api python -m app.data.cli ingest-rag --publish",
+    "data:evaluate": "PYTHONPATH=apps/api python -m app.data.cli evaluate-rag",
+    "data:quality": "PYTHONPATH=apps/api python -m app.data.cli quality-report",
+    "data:analytics": "PYTHONPATH=apps/api python -m app.data.cli analytics-report",
+    "data:pipeline": "PYTHONPATH=apps/api python -m app.data.cli run-pipeline",
+    "data:export": "PYTHONPATH=apps/api python -m app.data.cli export-release",
+    "data:search": "PYTHONPATH=apps/api python -m app.data.cli search-rag",
+    "validate": "npm run lint:api && npm run test:api && npm run lint:web && npm run build:web"
+  }
+}

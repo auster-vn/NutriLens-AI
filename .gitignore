@@ -1,0 +1,16 @@
+.next/
+node_modules/
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.pyc
+*.tsbuildinfo
+*.db
+apps/web/.next/
+apps/web/.next-e2e/
+apps/web/node_modules/
+apps/web/test-results/
+apps/web/playwright-report/
+apps/api/nutrilens.db
+.env

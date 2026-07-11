@@ -1,0 +1,1 @@
+{"id":"mixed_001","question":"Tôi dị ứng sữa, sản phẩm này dùng được không?","expected_route":"mixed","expected_sources":["food_allergens.md"],"required_facts":["allergen","missing"],"should_abstain":false}

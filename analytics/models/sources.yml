@@ -1,0 +1,9 @@
+version: 2
+sources:
+  - name: app
+    schema: public
+    tables:
+      - name: rag_answer_audit
+      - name: scan_history
+      - name: data_pipeline_runs
+      - name: product_cache

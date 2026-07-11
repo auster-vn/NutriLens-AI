@@ -1,0 +1,16 @@
+version: 2
+models:
+  - name: fct_rag_daily
+    description: Daily RAG quality and usage metrics by route.
+    columns:
+      - name: activity_date
+        tests: [not_null]
+      - name: route
+        tests: [not_null]
+  - name: fct_pipeline_daily
+    description: Daily pipeline reliability and throughput by pipeline.
+    columns:
+      - name: activity_date
+        tests: [not_null]
+      - name: pipeline
+        tests: [not_null]

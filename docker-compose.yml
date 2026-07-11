@@ -1,0 +1,53 @@
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_DB: nutrilens
+      POSTGRES_USER: nutrilens
+      POSTGRES_PASSWORD: nutrilens-local
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nutrilens -d nutrilens"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    volumes:
+      - nutrilens-db:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NUTRILENS_ENVIRONMENT: development
+      NUTRILENS_DATABASE_URL: postgresql+asyncpg://nutrilens:nutrilens-local@db:5432/nutrilens
+      NUTRILENS_CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+      NUTRILENS_JWT_SECRET: local-compose-secret-change-in-production
+      NUTRILENS_ADMIN_KEY: local-admin-key
+      NUTRILENS_RAG_RETRIEVAL_BACKEND: pgvector
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready')"]
+      interval: 10s
+      timeout: 4s
+      retries: 8
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  nutrilens-db:

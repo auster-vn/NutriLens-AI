@@ -1,0 +1,1 @@
+{"id":"product_001","question":"Sản phẩm này có nhiều đường không?","expected_route":"mixed","required_facts":["sugars_100g","missing data"],"should_abstain":false}
