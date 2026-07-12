@@ -28,6 +28,9 @@ SQLITE_COMPAT_MIGRATIONS = [
     "alter table user_profiles add column weight_kg FLOAT",
     "alter table user_profiles add column activity_level VARCHAR(32)",
     "alter table user_profiles add column target_weight_loss_kg_week FLOAT",
+    "alter table product_label_extractions add column words_json JSON default '[]'",
+    "alter table product_label_extractions add column preprocessing_json JSON default '{}'",
+    "alter table product_label_extractions add column provider_runs_json JSON default '[]'",
 ]
 
 POSTGRES_VECTOR_BOOTSTRAP = [
@@ -37,6 +40,11 @@ POSTGRES_VECTOR_BOOTSTRAP = [
     "alter table user_profiles add column if not exists weight_kg DOUBLE PRECISION",
     "alter table user_profiles add column if not exists activity_level VARCHAR(32)",
     "alter table user_profiles add column if not exists target_weight_loss_kg_week DOUBLE PRECISION",
+    "alter table product_label_extractions add column if not exists words_json JSONB not null default '[]'::jsonb",
+    "alter table product_label_extractions add column if not exists "
+    "preprocessing_json JSONB not null default '{}'::jsonb",
+    "alter table product_label_extractions add column if not exists "
+    "provider_runs_json JSONB not null default '[]'::jsonb",
     "create extension if not exists vector",
     "alter table rag_chunks add column if not exists embedding_vector vector(256)",
     """

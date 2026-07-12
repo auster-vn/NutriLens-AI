@@ -6,11 +6,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.analytics.marts import build_analytics_marts
 from app.core.database import get_session
-from app.core.models import AdminOperationAudit, DataPipelineRun, RagDocument, RagEvaluationRun, RagRelease
+from app.core.models import (
+    AdminOperationAudit,
+    DataPipelineRun,
+    LabelOcrEvaluationRun,
+    ProductLabelExtraction,
+    RagDocument,
+    RagEvaluationRun,
+    RagRelease,
+)
 from app.core.security import audit_safe_payload, require_admin
 from app.data.orchestration import run_knowledge_release_pipeline
 from app.data.quality import build_data_quality_report
 from app.observability.snapshot import build_observability_snapshot
+from app.products.label_ocr.benchmark import evaluate_label_pipeline
 from app.rag.benchmark import load_core_benchmark
 from app.rag.evaluation import compare_evaluation_metrics, evaluate_cases
 from app.rag.gate import GateDecision
@@ -327,6 +336,75 @@ async def analytics_marts(
     return await build_analytics_marts(session)
 
 
+@router.post("/label-ocr/evaluate")
+async def evaluate_label_ocr(
+    _: None = Depends(require_admin),
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    run = await evaluate_label_pipeline(session)
+    session.add(
+        AdminOperationAudit(
+            operation="label_ocr.evaluate",
+            payload={
+                "run_id": run.id,
+                "dataset_name": run.dataset_name,
+                "case_count": run.metrics_json.get("case_count"),
+            },
+        )
+    )
+    await session.commit()
+    return _label_evaluation_out(run)
+
+
+@router.get("/label-ocr/evaluation-runs")
+async def list_label_ocr_evaluations(
+    _: None = Depends(require_admin),
+    session: AsyncSession = Depends(get_session),
+) -> list[dict]:
+    result = await session.execute(
+        select(LabelOcrEvaluationRun).order_by(LabelOcrEvaluationRun.created_at.desc()).limit(20)
+    )
+    return [_label_evaluation_out(run) for run in result.scalars().all()]
+
+
+@router.get("/label-ocr/dashboard")
+async def label_ocr_dashboard(
+    _: None = Depends(require_admin),
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    latest = await session.scalar(
+        select(LabelOcrEvaluationRun).order_by(LabelOcrEvaluationRun.created_at.desc()).limit(1)
+    )
+    extractions = list(
+        (
+            await session.execute(
+                select(ProductLabelExtraction).order_by(ProductLabelExtraction.created_at.desc()).limit(100)
+            )
+        ).scalars()
+    )
+    successful_runs = [
+        run
+        for extraction in extractions
+        for run in (extraction.provider_runs_json or [])
+        if run.get("status") == "succeeded"
+    ]
+    return {
+        "latest_evaluation": _label_evaluation_out(latest) if latest else None,
+        "production": {
+            "extraction_count": len(extractions),
+            "confirmed_count": sum(extraction.status == "confirmed" for extraction in extractions),
+            "mean_confidence": round(
+                sum(extraction.confidence for extraction in extractions) / max(1, len(extractions)), 4
+            ),
+            "quality_issue_count": sum(len(extraction.validation_issues or []) for extraction in extractions),
+            "provider_successes": {
+                provider: sum(run.get("provider") == provider for run in successful_runs)
+                for provider in sorted({str(run.get("provider")) for run in successful_runs})
+            },
+        },
+    }
+
+
 def _release_out(release: RagRelease) -> RagReleaseOut:
     return RagReleaseOut(
         id=release.id,
@@ -368,6 +446,19 @@ def _pipeline_out(run: DataPipelineRun) -> PipelineRunOut:
         started_at=run.started_at,
         finished_at=run.finished_at,
     )
+
+
+def _label_evaluation_out(run: LabelOcrEvaluationRun) -> dict:
+    return {
+        "id": run.id,
+        "dataset_name": run.dataset_name,
+        "dataset_hash": run.dataset_hash,
+        "providers": run.providers or [],
+        "metrics": run.metrics_json or {},
+        "case_results": run.case_results or [],
+        "readiness": run.readiness_json or {},
+        "created_at": run.created_at,
+    }
 
 
 async def _run_gate(session: AsyncSession, release_id: str) -> GateDecision:

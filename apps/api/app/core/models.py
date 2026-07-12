@@ -46,6 +46,32 @@ class ProductCache(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
+class ProductLabelExtraction(Base):
+    __tablename__ = "product_label_extractions"
+    __table_args__ = (
+        Index("ix_product_label_extractions_barcode_created", "barcode", "created_at"),
+        Index("ix_product_label_extractions_status", "status"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    barcode: Mapped[str] = mapped_column(String(32), index=True)
+    user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"))
+    status: Mapped[str] = mapped_column(String(32), default="needs_review")
+    image_sha256: Mapped[str] = mapped_column(String(64))
+    image_mime: Mapped[str] = mapped_column(String(64))
+    ocr_provider: Mapped[str] = mapped_column(String(64))
+    extractor_version: Mapped[str] = mapped_column(String(32))
+    raw_text: Mapped[str] = mapped_column(Text)
+    words_json: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    preprocessing_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    provider_runs_json: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    extracted_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    confidence: Mapped[float] = mapped_column(Float, default=0)
+    validation_issues: Mapped[list[str]] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+
 class ScanHistory(Base):
     __tablename__ = "scan_history"
     __table_args__ = (
@@ -236,4 +262,18 @@ class RagEvaluationRun(Base):
     dataset_hash: Mapped[str] = mapped_column(String(64))
     metrics_json: Mapped[dict] = mapped_column(JSON, default=dict)
     case_results: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class LabelOcrEvaluationRun(Base):
+    __tablename__ = "label_ocr_evaluation_runs"
+    __table_args__ = (Index("ix_label_ocr_evaluation_runs_created", "created_at"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    dataset_name: Mapped[str] = mapped_column(String(255))
+    dataset_hash: Mapped[str] = mapped_column(String(64))
+    providers: Mapped[list[str]] = mapped_column(JSON, default=list)
+    metrics_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    case_results: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    readiness_json: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

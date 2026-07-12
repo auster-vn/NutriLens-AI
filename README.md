@@ -40,7 +40,7 @@ This repository is designed as an **AI/Data Engineering portfolio project**, not
 
 | Capability | What it does |
 |---|---|
-| **Barcode intelligence** | Scans with the browser camera or accepts manual barcodes, then normalizes Open Food Facts data. |
+| **Barcode and label intelligence** | Scans retail/GS1 codes, falls back to document OCR for unknown products, and requires human confirmation before publishing extracted label data. |
 | **Personalized scoring** | Evaluates sugar, sodium, saturated fat, protein, fiber, calories, allergens, diets, additives, and Nutri-Score with deterministic rules. |
 | **Product comparison** | Compares two products by normalized nutrition dimensions and explains the recommendation. |
 | **Grounded nutrition assistant** | Answers everyday food and label questions in Vietnamese with approved evidence, citations, and abstention when evidence is weak. |
@@ -110,6 +110,25 @@ The platform includes:
 - Prometheus-compatible metrics at `/metrics`;
 - runtime analytics marts and dbt-ready models in `analytics/`;
 - bronze, silver, and gold release artifact export.
+
+### Multimodal package-label extraction
+
+When a GTIN is missing from Open Food Facts, NutriLens runs a provenance-first Document AI workflow:
+
+```text
+Package image -> quality gate -> perspective/deskew/CLAHE/adaptive threshold
+              -> Tesseract + optional PaddleOCR -> bbox ensemble
+              -> layout blocks -> ingredient and nutrition parsers
+              -> field confidence + semantic validation -> human confirmation
+```
+
+- Word-level text, confidence, bounding boxes, provider, line, and block IDs are persisted with the extraction.
+- Preprocessing metadata records blur, brightness, contrast, glare, skew, transformations, and quality score.
+- Ingredient parsing supports nested groups, percentages, bilingual ontology matching, additives, and fuzzy OCR correction.
+- Nutrition parsing associates values and units by row coordinates, normalizes `mg/g` and `kJ/kcal`, and validates macros.
+- Confirmed user corrections become labeled evaluation examples instead of silently replacing model output.
+- The admin OCR dashboard separates labeled-hypothesis CER from runtime-image CER and tracks field F1, numeric accuracy, allergen recall, and model readiness.
+- LayoutLMv3/NER training remains gated until labeled-data and structured-field quality thresholds are met.
 
 ## System Architecture
 
@@ -196,6 +215,10 @@ NUTRILENS_CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 NUTRILENS_RAG_EMBEDDING_PROVIDER=feature_hash
 NUTRILENS_RAG_EMBEDDING_DIMENSIONS=256
 NUTRILENS_RAG_RETRIEVAL_BACKEND=auto
+NUTRILENS_LABEL_OCR_PROVIDERS=tesseract,paddleocr
+NUTRILENS_LABEL_OCR_QUALITY_THRESHOLD=0.4
+NUTRILENS_LABEL_OCR_BENCHMARK_MIN_CASES_FOR_LAYOUTLM=200
+NUTRILENS_LABEL_OCR_BENCHMARK_MIN_FIELD_F1=0.85
 ```
 
 Start the API:

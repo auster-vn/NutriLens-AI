@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Database, FileText, Play, RefreshCw, RotateCcw, Trash2, Upload } from "lucide-react";
+import { Database, FileText, Play, RefreshCw, RotateCcw, ScanText, Trash2, Upload } from "lucide-react";
 import { apiFetch, toUserMessage } from "@/lib/api";
 
 const defaultMetadata = {
@@ -34,7 +34,7 @@ type AuditRow = {
 };
 
 export function AdminPanel() {
-  const [activeTab, setActiveTab] = useState<"upload" | "documents" | "audit" | "data">("upload");
+  const [activeTab, setActiveTab] = useState<"upload" | "documents" | "audit" | "data" | "ocr">("upload");
   const [adminKey, setAdminKey] = useState("dev-admin-key");
   const [filename, setFilename] = useState("custom_guidance.md");
   const [title, setTitle] = useState("Custom Guidance");
@@ -50,6 +50,7 @@ export function AdminPanel() {
   const [quality, setQuality] = useState<Record<string, unknown> | null>(null);
   const [observability, setObservability] = useState<Record<string, Record<string, unknown>> | null>(null);
   const [analytics, setAnalytics] = useState<Record<string, unknown> | null>(null);
+  const [ocrDashboard, setOcrDashboard] = useState<Record<string, unknown> | null>(null);
 
   const headers = { "X-Admin-Key": adminKey };
 
@@ -139,6 +140,30 @@ export function AdminPanel() {
     }
   }
 
+  async function loadOcrDashboard() {
+    setMessage("");
+    try {
+      setOcrDashboard(await adminJson<Record<string, unknown>>("/api/admin/label-ocr/dashboard"));
+    } catch (err) {
+      setMessage(toUserMessage(err, "Không thể tải dashboard OCR."));
+    }
+  }
+
+  async function runOcrEvaluation() {
+    setMessage("");
+    try {
+      await adminJson("/api/admin/label-ocr/evaluate", { method: "POST" });
+      await loadOcrDashboard();
+    } catch (err) {
+      setMessage(toUserMessage(err, "Không thể chạy benchmark OCR."));
+    }
+  }
+
+  const latestOcr = ocrDashboard?.latest_evaluation as Record<string, unknown> | null | undefined;
+  const ocrMetrics = latestOcr?.metrics as Record<string, unknown> | undefined;
+  const ocrReadiness = latestOcr?.readiness as Record<string, unknown> | undefined;
+  const ocrProduction = ocrDashboard?.production as Record<string, unknown> | undefined;
+
   return (
     <div className="admin-page">
       <div className="admin-heading">
@@ -163,6 +188,9 @@ export function AdminPanel() {
           </button>
           <button className={`button ${activeTab === "data" ? "" : "secondary"}`} onClick={() => { setActiveTab("data"); void loadDataOps(); }}>
             <Database size={18} />Data Ops
+          </button>
+          <button className={`button ${activeTab === "ocr" ? "" : "secondary"}`} onClick={() => { setActiveTab("ocr"); void loadOcrDashboard(); }}>
+            <ScanText size={18} />OCR Evaluation
           </button>
         </div>
         {message ? <p className={message.startsWith("{") ? "error" : "muted"}>{message}</p> : null}
@@ -257,6 +285,46 @@ export function AdminPanel() {
             <article className="card"><p className="eyebrow">Lineage</p><h2>Pipeline runs</h2><pre className="code-block">{JSON.stringify(pipelineRuns.slice(0, 5), null, 2)}</pre></article>
             <article className="card"><p className="eyebrow">RAG benchmark</p><h2>Evaluation runs</h2><pre className="code-block">{JSON.stringify(evaluationRuns.slice(0, 5), null, 2)}</pre></article>
             <article className="card"><p className="eyebrow">Analytics layer</p><h2>Product and AI marts</h2><pre className="code-block">{JSON.stringify(analytics, null, 2)}</pre></article>
+          </div>
+        </section>
+      ) : null}
+
+      {activeTab === "ocr" ? (
+        <section className="grid">
+          <div className="card toolbar">
+            <button className="button" onClick={() => void runOcrEvaluation()}><Play size={17} />Run OCR benchmark</button>
+            <button className="icon-button" title="Refresh OCR dashboard" onClick={() => void loadOcrDashboard()}><RefreshCw size={17} /></button>
+          </div>
+          <div className="metric-grid">
+            <article className="metric"><span>Production extractions</span><strong>{String(ocrProduction?.extraction_count ?? 0)}</strong><small>{String(ocrProduction?.confirmed_count ?? 0)} confirmed</small></article>
+            <article className="metric"><span>Field F1</span><strong>{Math.round(Number(ocrMetrics?.field_f1 ?? 0) * 100)}%</strong><small>structured extraction</small></article>
+            <article className="metric"><span>Numeric accuracy</span><strong>{Math.round(Number(ocrMetrics?.numeric_accuracy ?? 0) * 100)}%</strong><small>2% tolerance</small></article>
+            <article className="metric"><span>Allergen recall</span><strong>{Math.round(Number(ocrMetrics?.allergen_recall ?? 0) * 100)}%</strong><small>safety-critical metric</small></article>
+          </div>
+          <div className="grid two">
+            <article className="card">
+              <p className="eyebrow">Provider benchmark</p>
+              <h2>Character error rate</h2>
+              <pre className="code-block">{JSON.stringify({
+                labeledHypotheses: ocrMetrics?.provider_cer ?? {},
+                runtimeImages: ocrMetrics?.runtime_provider_cer ?? {}
+              }, null, 2)}</pre>
+            </article>
+            <article className="card">
+              <p className="eyebrow">Model readiness gate</p>
+              <h2>{ocrReadiness?.layoutlm_or_ner_ready ? "Ready for LayoutLMv3 / NER" : "Collect more labeled data"}</h2>
+              <pre className="code-block">{JSON.stringify(ocrReadiness ?? {}, null, 2)}</pre>
+            </article>
+            <article className="card">
+              <p className="eyebrow">Production quality</p>
+              <h2>OCR pipeline telemetry</h2>
+              <pre className="code-block">{JSON.stringify(ocrProduction ?? {}, null, 2)}</pre>
+            </article>
+            <article className="card">
+              <p className="eyebrow">Case analysis</p>
+              <h2>Latest benchmark run</h2>
+              <pre className="code-block">{JSON.stringify((latestOcr?.case_results as unknown[] | undefined)?.slice(0, 8) ?? [], null, 2)}</pre>
+            </article>
           </div>
         </section>
       ) : null}

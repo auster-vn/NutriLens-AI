@@ -77,6 +77,36 @@ class ProductWithScore(BaseModel):
     score: ProductScoreOut
 
 
+class LabelExtractionOut(BaseModel):
+    id: str
+    barcode: str
+    status: str
+    raw_text: str
+    ingredients_text: str | None = None
+    allergens: list[str] = Field(default_factory=list)
+    additives: list[str] = Field(default_factory=list)
+    nutriments: dict = Field(default_factory=dict)
+    confidence: float
+    validation_issues: list[str] = Field(default_factory=list)
+    ocr_provider: str
+    extractor_version: str
+    words: list[dict] = Field(default_factory=list)
+    preprocessing: dict = Field(default_factory=dict)
+    provider_runs: list[dict] = Field(default_factory=list)
+    blocks: list[dict] = Field(default_factory=list)
+    fields: dict = Field(default_factory=dict)
+    ingredient_entities: list[dict] = Field(default_factory=list)
+
+
+class LabelExtractionConfirmRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=255)
+    brand: str | None = Field(default=None, max_length=255)
+    ingredients_text: str | None = Field(default=None, max_length=10000)
+    allergens: list[str] = Field(default_factory=list)
+    additives: list[str] = Field(default_factory=list)
+    nutriments: dict = Field(default_factory=dict)
+
+
 class ProductCompareRequest(BaseModel):
     barcode_a: str
     barcode_b: str

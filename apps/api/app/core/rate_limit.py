@@ -10,6 +10,7 @@ Window = tuple[int, int]
 LIMITS: dict[str, Window] = {
     "auth": (12, 60),
     "scan": (20, 60),
+    "label_ocr": (4, 60),
     "chat": (10, 60),
     "admin_mutation": (30, 60),
 }
@@ -24,6 +25,8 @@ def classify_request(request: Request) -> str | None:
         return "auth"
     if path == "/api/products/scan" and method == "POST":
         return "scan"
+    if path == "/api/products/label-extractions" and method == "POST":
+        return "label_ocr"
     if path == "/api/chat/stream" and method == "POST":
         return "chat"
     if path.startswith("/api/admin") and method in {"POST", "PUT", "PATCH", "DELETE"}:

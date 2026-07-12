@@ -56,6 +56,10 @@ class Settings(BaseSettings):
     rag_semantic_weight: float = 0.8
     rag_retrieval_backend: str = "auto"
     rag_candidate_limit: int = 80
+    label_ocr_providers: str = "tesseract,paddleocr"
+    label_ocr_quality_threshold: float = 0.4
+    label_ocr_benchmark_min_cases_for_layoutlm: int = 200
+    label_ocr_benchmark_min_field_f1: float = 0.85
 
     @field_validator("database_url", mode="before")
     @classmethod

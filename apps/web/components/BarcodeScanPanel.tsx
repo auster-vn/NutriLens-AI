@@ -5,7 +5,8 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 import { BarcodeFormat } from "@zxing/library";
 import { Search, Video, VideoOff, Camera, History, ImageUp } from "lucide-react";
 import Link from "next/link";
-import { apiFetch, toUserMessage, type ProductWithScore } from "@/lib/api";
+import { ApiError, apiFetch, toUserMessage, type ProductWithScore } from "@/lib/api";
+import { ProductLabelRecovery } from "./ProductLabelRecovery";
 import { ProductSummary } from "./ProductSummary";
 import { ScanHistoryPanel } from "./ScanHistoryPanel";
 
@@ -21,12 +22,14 @@ export function BarcodeScanPanel() {
   const [decodingImage, setDecodingImage] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [historyVersion, setHistoryVersion] = useState(0);
+  const [productMissing, setProductMissing] = useState(false);
 
   useEffect(() => () => controlsRef.current?.stop(), []);
 
   async function lookup(code = barcode, format = barcodeFormat) {
     setLoading(true);
     setError(null);
+    setProductMissing(false);
     try {
       const data = await apiFetch<ProductWithScore>("/api/products/scan", {
         method: "POST",
@@ -35,6 +38,7 @@ export function BarcodeScanPanel() {
       setResult(data);
       setHistoryVersion((v) => v + 1);
     } catch (err) {
+      if (err instanceof ApiError && err.status === 404) setProductMissing(true);
       setError(toUserMessage(err, "Không thể tra cứu mã vạch. Vui lòng thử lại."));
     } finally {
       setLoading(false);
@@ -202,6 +206,13 @@ export function BarcodeScanPanel() {
 
         {error ? <p className="error">{error}</p> : null}
       </section>
+
+      {productMissing ? (
+        <ProductLabelRecovery
+          barcode={barcode}
+          onConfirmed={() => void lookup(barcode, barcodeFormat)}
+        />
+      ) : null}
 
       {/* Result */}
       {result ? (

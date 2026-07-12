@@ -59,6 +59,27 @@ export type ProductWithScore = {
   score: ProductScore;
 };
 
+export type LabelExtraction = {
+  id: string;
+  barcode: string;
+  status: string;
+  raw_text: string;
+  ingredients_text?: string | null;
+  allergens: string[];
+  additives: string[];
+  nutriments: Record<string, number>;
+  confidence: number;
+  validation_issues: string[];
+  ocr_provider: string;
+  extractor_version: string;
+  words: Array<Record<string, unknown>>;
+  preprocessing: Record<string, unknown>;
+  provider_runs: Array<Record<string, unknown>>;
+  blocks: Array<Record<string, unknown>>;
+  fields: Record<string, Record<string, unknown>>;
+  ingredient_entities: Array<Record<string, unknown>>;
+};
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -84,6 +105,12 @@ const DETAIL_MESSAGES: Record<string, string> = {
   "UPC-E must contain exactly 8 digits.": "Mã UPC-E phải có đúng 8 chữ số.",
   "UPC-E number system must be 0 or 1.": "Mã UPC-E sử dụng number system chưa được hỗ trợ.",
   "Product not found.": "Không tìm thấy sản phẩm với mã vạch này.",
+  "Label image must be JPEG, PNG, or WebP.": "Ảnh nhãn phải có định dạng JPEG, PNG hoặc WebP.",
+  "Label image must not exceed 8 MB.": "Ảnh nhãn không được lớn hơn 8 MB.",
+  "The uploaded file is not a valid image.": "Tệp đã chọn không phải ảnh hợp lệ.",
+  "No readable text was found in the label image.": "Không tìm thấy chữ đủ rõ trong ảnh nhãn.",
+  "Label image quality is too low.": "Ảnh nhãn quá mờ, tối hoặc có độ phân giải thấp. Vui lòng chụp lại gần hơn.",
+  "OCR engine is not installed on the server.": "Dịch vụ đọc nhãn chưa sẵn sàng trên máy chủ.",
   "Pantry item not found.": "Không tìm thấy sản phẩm trong tủ đồ.",
   "Favorite not found.": "Sản phẩm không còn trong danh sách yêu thích.",
   "Meal plan not found.": "Không tìm thấy kế hoạch bữa ăn.",

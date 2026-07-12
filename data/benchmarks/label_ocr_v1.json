@@ -1,0 +1,74 @@
+{
+  "name": "nutrilens-label-ocr-v1",
+  "version": 1,
+  "cases": [
+    {
+      "id": "vi-yogurt-001",
+      "language": "vi",
+      "difficulty": "clean",
+      "ground_truth_text": "THÀNH PHẦN: Sữa bò 65%, đường, bột whey, chất ổn định E407, E412. DINH DƯỠNG Năng lượng 120 kcal Chất đạm 4,2 g Carbohydrate 18 g Đường 12,5 g Chất béo 3,1 g Natri 75 mg",
+      "ocr_text_by_provider": {
+        "tesseract": "THÀNH PHẦN: Sữa bò 65%, đường, bột whey, chất ổn định E407, E412. DINH DƯỠNG Năng lượng 120 kcal Chất đạm 4,2 g Carbohydrate 18 g Đường 12,5 g Chất béo 3,1 g Natri 75 mg",
+        "paddleocr": "THÀNH PHẦN: Sữa bò 65%, đường, bột whey, chất ổn định E407, E412. DINH DƯỠNG Năng lượng 120 kcal Chất đạm 4,2 g Carbohydrate 18 g Đường 12,5 g Chất béo 3,1 g Natri 75 mg"
+      },
+      "expected": {"allergens": ["milk"], "additives": ["E407", "E412"], "nutriments": {"energy-kcal_100g": 120, "proteins_100g": 4.2, "carbohydrates_100g": 18, "sugars_100g": 12.5, "fat_100g": 3.1, "sodium_100g": 0.075}}
+    },
+    {
+      "id": "en-oat-002",
+      "language": "en",
+      "difficulty": "clean",
+      "image_path": "images/en_oat_002.png",
+      "ground_truth_text": "Ingredients: water, oats (12%), sugar, salt. Nutrition Energy 48 kcal Fat 1.5 g Carbohydrate 7.8 g Sugars 3.2 g Protein 1.1 g",
+      "ocr_text_by_provider": {
+        "tesseract": "Ingredients: water, oats (12%), sugar, salt. Nutrition Energy 48 kcal Fat 1.5 g Carbohydrate 7.8 g Sugars 3.2 g Protein 1.1 g",
+        "paddleocr": "Ingredients: water, oats (12%), sugar, salt. Nutrition Energy 48 kcal Fat 1.5 g Carbohydrate 7.8 g Sugars 3.2 g Protein 1.1 g"
+      },
+      "expected": {"allergens": [], "additives": [], "nutriments": {"energy-kcal_100g": 48, "fat_100g": 1.5, "carbohydrates_100g": 7.8, "sugars_100g": 3.2, "proteins_100g": 1.1}}
+    },
+    {
+      "id": "vi-nested-003",
+      "language": "vi",
+      "difficulty": "nested_ingredients",
+      "ground_truth_text": "Thành phần: chocolate (đường, cacao, sữa bột), bột mì, trứng, chất nhũ hóa E322. Dinh dưỡng Năng lượng 430 kcal Protein 7 g Chất béo 18 g Carbohydrate 61 g",
+      "ocr_text_by_provider": {
+        "tesseract": "Thành phần: chocolate (đường, cacao, sữa bột), bột mì, trứng, chất nhũ hóa E322. Dinh dưỡng Năng lượng 430 kcal Protein 7 g Chất béo 18 g Carbohydrate 61 g",
+        "paddleocr": "Thành phần: chocolate (đường, cacao, sữa bột), bột mì, trứng, chất nhũ hóa E322. Dinh dưỡng Năng lượng 430 kcal Protein 7 g Chất béo 18 g Carbohydrate 61 g"
+      },
+      "expected": {"allergens": ["egg", "gluten", "milk"], "additives": ["E322"], "nutriments": {"energy-kcal_100g": 430, "proteins_100g": 7, "fat_100g": 18, "carbohydrates_100g": 61}}
+    },
+    {
+      "id": "en-mg-004",
+      "language": "en",
+      "difficulty": "units",
+      "image_path": "images/en_mg_004.png",
+      "ground_truth_text": "Ingredients: peanuts, sugar, salt. Nutrition Energy 590 kcal Protein 25 g Fat 49 g Carbohydrate 16 g Sodium 400 mg",
+      "ocr_text_by_provider": {
+        "tesseract": "Ingredients: peanuts, sugar, salt. Nutrition Energy 590 kcal Protein 25 g Fat 49 g Carbohydrate 16 g Sodium 400 mg",
+        "paddleocr": "Ingredients: peanuts, sugar, salt. Nutrition Energy 590 kcal Protein 25 g Fat 49 g Carbohydrate 16 g Sodium 400 mg"
+      },
+      "expected": {"allergens": ["peanut"], "additives": [], "nutriments": {"energy-kcal_100g": 590, "proteins_100g": 25, "fat_100g": 49, "carbohydrates_100g": 16, "sodium_100g": 0.4}}
+    },
+    {
+      "id": "vi-ocr-noise-005",
+      "language": "vi",
+      "difficulty": "ocr_noise",
+      "ground_truth_text": "Thành phần: đậu nành, đường, nước, E471. Dinh dưỡng Protein 3,6 g Carbohydrate 9 g Đường 7 g Chất béo 2 g",
+      "ocr_text_by_provider": {
+        "tesseract": "Thanh phan: dau nanh, duong, nuoc, E47l. Dinh duong Protein 3,6 g Carbohydrate 9 g Duong 7 g Chat beo 2 g",
+        "paddleocr": "Thành phần: đậu nành, đường, nước, E471. Dinh dưỡng Protein 3,6 g Carbohydrate 9 g Đường 7 g Chất béo 2 g"
+      },
+      "expected": {"allergens": ["soy"], "additives": ["E471"], "nutriments": {"proteins_100g": 3.6, "carbohydrates_100g": 9, "sugars_100g": 7, "fat_100g": 2}}
+    },
+    {
+      "id": "en-kj-006",
+      "language": "en",
+      "difficulty": "energy_conversion",
+      "ground_truth_text": "Ingredients: water, sugar. Nutrition Energy 418 kJ Carbohydrate 24 g Sugars 24 g",
+      "ocr_text_by_provider": {
+        "tesseract": "Ingredients: water, sugar. Nutrition Energy 418 kJ Carbohydrate 24 g Sugars 24 g",
+        "paddleocr": "Ingredients: water, sugar. Nutrition Energy 418 kJ Carbohydrate 24 g Sugars 24 g"
+      },
+      "expected": {"allergens": [], "additives": [], "nutriments": {"energy-kcal_100g": 99.9, "carbohydrates_100g": 24, "sugars_100g": 24}}
+    }
+  ]
+}

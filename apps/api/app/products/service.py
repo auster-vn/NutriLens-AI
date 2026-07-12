@@ -52,6 +52,8 @@ async def upsert_product(session: AsyncSession, data: dict) -> ProductCache:
 
 async def get_or_fetch_product(session: AsyncSession, barcode: str) -> ProductCache:
     cached = await get_cached_product(session, barcode)
+    if cached and cached.source and cached.source.startswith("package_ocr"):
+        return cached
     if cached and not _is_stale(cached):
         return cached
     try:
