@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Send, Bot, User, Clock, BookOpen } from "lucide-react";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, toUserMessage } from "@/lib/api";
 
 type ChatResult = {
   route: string;
@@ -83,7 +83,7 @@ export function ChatPanel() {
       ]);
       setQuestion("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Chat thất bại");
+      setError(toUserMessage(err, "Không thể gửi câu hỏi. Vui lòng thử lại."));
     } finally {
       setLoading(false);
     }

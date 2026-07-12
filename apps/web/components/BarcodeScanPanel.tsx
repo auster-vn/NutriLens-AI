@@ -2,36 +2,40 @@
 
 import { useEffect, useRef, useState } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
-import { Search, Video, VideoOff, Camera, History } from "lucide-react";
+import { BarcodeFormat } from "@zxing/library";
+import { Search, Video, VideoOff, Camera, History, ImageUp } from "lucide-react";
 import Link from "next/link";
-import { apiFetch, type ProductWithScore } from "@/lib/api";
+import { apiFetch, toUserMessage, type ProductWithScore } from "@/lib/api";
 import { ProductSummary } from "./ProductSummary";
 import { ScanHistoryPanel } from "./ScanHistoryPanel";
 
 export function BarcodeScanPanel() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<{ stop: () => void } | null>(null);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
   const [barcode, setBarcode] = useState("737628064502");
+  const [barcodeFormat, setBarcodeFormat] = useState<string | null>(null);
   const [result, setResult] = useState<ProductWithScore | null>(null);
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [decodingImage, setDecodingImage] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [historyVersion, setHistoryVersion] = useState(0);
 
   useEffect(() => () => controlsRef.current?.stop(), []);
 
-  async function lookup(code = barcode) {
+  async function lookup(code = barcode, format = barcodeFormat) {
     setLoading(true);
     setError(null);
     try {
       const data = await apiFetch<ProductWithScore>("/api/products/scan", {
         method: "POST",
-        body: JSON.stringify({ barcode: code }),
+        body: JSON.stringify({ barcode: code, barcode_format: format }),
       });
       setResult(data);
       setHistoryVersion((v) => v + 1);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Quét thất bại");
+      setError(toUserMessage(err, "Không thể tra cứu mã vạch. Vui lòng thử lại."));
     } finally {
       setLoading(false);
     }
@@ -42,22 +46,64 @@ export function BarcodeScanPanel() {
     setScanning(true);
     const reader = new BrowserMultiFormatReader();
     try {
-      controlsRef.current = await reader.decodeFromVideoDevice(
-        undefined,
+      controlsRef.current = await reader.decodeFromConstraints(
+        {
+          audio: false,
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+        },
         videoRef.current!,
         (scanResult) => {
           if (scanResult) {
             const code = scanResult.getText();
+            const format = BarcodeFormat[scanResult.getBarcodeFormat()];
             setBarcode(code);
+            setBarcodeFormat(format);
             controlsRef.current?.stop();
             setScanning(false);
-            void lookup(code);
+            void lookup(code, format);
           }
         }
       );
     } catch (err) {
       setScanning(false);
-      setError(err instanceof Error ? err.message : "Camera không khả dụng");
+      setError(toUserMessage(err, "Camera không khả dụng trên thiết bị này."));
+    }
+  }
+
+  async function scanImage(file: File | undefined) {
+    if (!file) return;
+    setError(null);
+    setDecodingImage(true);
+    try {
+      const bitmap = await createImageBitmap(file);
+      const maxSide = 1600;
+      const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      try {
+        if (!context) throw new Error("Canvas 2D is unavailable");
+        context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      } finally {
+        bitmap.close();
+      }
+
+      const decoded = new BrowserMultiFormatReader().decodeFromCanvas(canvas);
+      const code = decoded.getText();
+      const format = BarcodeFormat[decoded.getBarcodeFormat()];
+      setBarcode(code);
+      setBarcodeFormat(format);
+      await lookup(code, format);
+    } catch (err) {
+      setError(toUserMessage(err, "Không tìm thấy barcode rõ nét trong ảnh. Hãy chụp gần hơn và đủ sáng."));
+    } finally {
+      setDecodingImage(false);
+      if (imageInputRef.current) imageInputRef.current.value = "";
     }
   }
 
@@ -109,26 +155,49 @@ export function BarcodeScanPanel() {
             {scanning ? "Dừng camera" : "Bật camera"}
           </button>
 
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            hidden
+            onChange={(event) => void scanImage(event.target.files?.[0])}
+          />
+          <button
+            className="button secondary"
+            type="button"
+            onClick={() => imageInputRef.current?.click()}
+            disabled={decodingImage || loading}
+          >
+            <ImageUp size={16} />
+            {decodingImage ? "Đang đọc ảnh…" : "Đọc từ ảnh"}
+          </button>
+
           <label className="field" style={{ flex: "1 1 200px" }}>
             <span>Mã vạch</span>
             <input
               value={barcode}
-              onChange={(e) => setBarcode(e.target.value)}
-              inputMode="numeric"
-              placeholder="Nhập mã vạch..."
+              onChange={(e) => { setBarcode(e.target.value); setBarcodeFormat(null); }}
+              inputMode="text"
+              placeholder="GTIN hoặc GS1 Digital Link..."
             />
           </label>
 
           <button
             className="button"
             type="button"
-            onClick={() => lookup()}
+            onClick={() => lookup(barcode, barcodeFormat)}
             disabled={loading}
             style={{ alignSelf: "flex-end" }}
           >
             <Search size={16} />
             {loading ? "Đang tìm…" : "Tra cứu"}
           </button>
+        </div>
+
+        <div className="barcode-support-row">
+          {barcodeFormat ? <span className="badge">Đã nhận diện: {barcodeFormat.replaceAll("_", "-")}</span> : null}
+          <span className="muted">Hỗ trợ EAN, UPC, GTIN-14, Code 128/GS1, Data Matrix và GS1 QR.</span>
         </div>
 
         {error ? <p className="error">{error}</p> : null}

@@ -26,7 +26,7 @@ async def scan_product(
     user: User | None = Depends(get_optional_user),
     session: AsyncSession = Depends(get_session),
 ) -> ProductWithScore:
-    barcode = validate_barcode(request.barcode)
+    barcode = validate_barcode(request.barcode, request.barcode_format)
     profile = request.user_profile
     if profile is None and user is not None:
         stored_profile = await session.get(UserProfile, user.id)

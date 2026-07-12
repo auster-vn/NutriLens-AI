@@ -49,6 +49,7 @@ class ProductOut(BaseModel):
 
 class ProductScanRequest(BaseModel):
     barcode: str
+    barcode_format: str | None = Field(default=None, max_length=32)
     user_profile: UserProfileInput | None = None
 
 

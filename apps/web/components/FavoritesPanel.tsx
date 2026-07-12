@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { HeartOff, ScanLine } from "lucide-react";
-import { apiFetch, type Product } from "@/lib/api";
+import { apiFetch, toUserMessage, type Product } from "@/lib/api";
 
 export function FavoritesPanel() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -17,7 +17,7 @@ export function FavoritesPanel() {
   useEffect(() => {
     // Initial client-side fetch for the signed-in user's favorites.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    void load().catch((err) => setError(err instanceof Error ? err.message : "Favorites failed"));
+    void load().catch((err) => setError(toUserMessage(err, "Không thể tải danh sách yêu thích.")));
   }, []);
 
   async function remove(barcode: string) {
@@ -25,7 +25,7 @@ export function FavoritesPanel() {
       await apiFetch<void>(`/api/favorites/${barcode}`, { method: "DELETE" });
       setProducts((current) => current.filter((product) => product.barcode !== barcode));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not remove favorite");
+      setError(toUserMessage(err, "Không thể xóa sản phẩm yêu thích."));
     }
   }
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Database, FileText, Play, RefreshCw, RotateCcw, Trash2, Upload } from "lucide-react";
-import { API_BASE } from "@/lib/api";
+import { apiFetch, toUserMessage } from "@/lib/api";
 
 const defaultMetadata = {
   authority: "editorial synthesis",
@@ -51,74 +51,72 @@ export function AdminPanel() {
   const [observability, setObservability] = useState<Record<string, Record<string, unknown>> | null>(null);
   const [analytics, setAnalytics] = useState<Record<string, unknown> | null>(null);
 
-  const headers = { "Content-Type": "application/json", "X-Admin-Key": adminKey };
+  const headers = { "X-Admin-Key": adminKey };
 
   async function upload() {
     setMessage("");
     try {
-      const response = await fetch(`${API_BASE}/api/admin/documents`, {
+      await apiFetch<AdminDocument>("/api/admin/documents", {
         method: "POST",
         headers,
         body: JSON.stringify({ filename, title, metadata: JSON.parse(metadata), content })
       });
-      setMessage(response.ok ? "Uploaded and audited" : await response.text());
-      if (response.ok) {
-        await loadDocuments();
-        setActiveTab("documents");
-      }
+      setMessage("Tài liệu đã được tải lên và ghi audit.");
+      await loadDocuments();
+      setActiveTab("documents");
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Upload failed");
+      setMessage(toUserMessage(err, "Không thể tải tài liệu lên."));
     }
   }
 
   async function loadDocuments() {
-    const response = await fetch(`${API_BASE}/api/admin/documents`, { headers });
-    if (!response.ok) {
-      setMessage(await response.text());
-      return;
+    try {
+      const rows = await apiFetch<AdminDocument[]>("/api/admin/documents", { headers });
+      setDocuments(rows);
+      setSelectedDocument(rows[0] ?? null);
+    } catch (err) {
+      setMessage(toUserMessage(err, "Không thể tải danh sách tài liệu."));
     }
-    const rows = (await response.json()) as AdminDocument[];
-    setDocuments(rows);
-    setSelectedDocument(rows[0] ?? null);
   }
 
   async function loadAudit() {
-    const response = await fetch(`${API_BASE}/api/admin/audit`, { headers });
-    if (!response.ok) {
-      setMessage(await response.text());
-      return;
+    try {
+      setAudit(await apiFetch<AuditRow[]>("/api/admin/audit", { headers }));
+    } catch (err) {
+      setMessage(toUserMessage(err, "Không thể tải nhật ký quản trị."));
     }
-    setAudit((await response.json()) as AuditRow[]);
   }
 
   async function deleteDocument(document: AdminDocument) {
     if (!confirm(`Delete ${document.filename}?`)) {
       return;
     }
-    const response = await fetch(`${API_BASE}/api/admin/documents/${document.id}`, {
+    try {
+      await apiFetch<void>(`/api/admin/documents/${document.id}`, {
       method: "DELETE",
       headers
-    });
-    setMessage(response.ok ? "Deleted" : await response.text());
-    await loadDocuments();
+      });
+      setMessage("Đã xóa tài liệu.");
+      await loadDocuments();
+    } catch (err) {
+      setMessage(toUserMessage(err, "Không thể xóa tài liệu."));
+    }
   }
 
-  async function adminJson(path: string, init?: RequestInit) {
-    const response = await fetch(`${API_BASE}${path}`, { ...init, headers });
-    if (!response.ok) throw new Error(await response.text());
-    return response.status === 204 ? null : response.json();
+  async function adminJson<T>(path: string, init?: RequestInit): Promise<T> {
+    return apiFetch<T>(path, { ...init, headers });
   }
 
   async function loadDataOps() {
     setMessage("");
     try {
       const [releaseRows, pipelineRows, evaluationRows, qualityReport, observabilitySnapshot, analyticsMarts] = await Promise.all([
-        adminJson("/api/admin/rag/releases"),
-        adminJson("/api/admin/data/pipeline-runs"),
-        adminJson("/api/admin/evaluation/runs"),
-        adminJson("/api/admin/data/quality"),
-        adminJson("/api/admin/observability"),
-        adminJson("/api/admin/analytics/marts")
+        adminJson<Array<Record<string, unknown>>>("/api/admin/rag/releases"),
+        adminJson<Array<Record<string, unknown>>>("/api/admin/data/pipeline-runs"),
+        adminJson<Array<Record<string, unknown>>>("/api/admin/evaluation/runs"),
+        adminJson<Record<string, unknown>>("/api/admin/data/quality"),
+        adminJson<Record<string, Record<string, unknown>>>("/api/admin/observability"),
+        adminJson<Record<string, unknown>>("/api/admin/analytics/marts")
       ]);
       setReleases(releaseRows);
       setPipelineRuns(pipelineRows);
@@ -127,17 +125,17 @@ export function AdminPanel() {
       setObservability(observabilitySnapshot);
       setAnalytics(analyticsMarts);
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Data operations failed");
+      setMessage(toUserMessage(err, "Không thể tải dữ liệu vận hành."));
     }
   }
 
   async function runOperation(path: string, body?: object) {
     setMessage("");
     try {
-      await adminJson(path, { method: "POST", body: body ? JSON.stringify(body) : undefined });
+      await adminJson<unknown>(path, { method: "POST", body: body ? JSON.stringify(body) : undefined });
       await loadDataOps();
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Operation failed");
+      setMessage(toUserMessage(err, "Không thể thực hiện thao tác quản trị."));
     }
   }
 

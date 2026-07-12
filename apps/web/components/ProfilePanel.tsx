@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Activity, Calculator, Save } from "lucide-react";
-import { apiFetch, defaultProfile, type TdeeResult, type UserProfile } from "@/lib/api";
+import { apiFetch, defaultProfile, toUserMessage, type TdeeResult, type UserProfile } from "@/lib/api";
 
 const goals = ["general", "low_sugar", "low_sodium", "high_protein", "weight_loss", "vegetarian", "vegan", "gluten_free", "lactose_free"];
 const activityOptions = [
@@ -26,13 +26,13 @@ export function ProfilePanel() {
     try {
       const saved = await apiFetch<UserProfile>("/api/profile", { method: "PUT", body: JSON.stringify(profile) });
       setProfile(saved); setMessage("Đã lưu hồ sơ");
-    } catch (err) { setError(err instanceof Error ? err.message : "Không thể lưu hồ sơ"); }
+    } catch (err) { setError(toUserMessage(err, "Không thể lưu hồ sơ.")); }
   }
 
   async function calculate() {
     setError(null);
     try { setResult(await apiFetch<TdeeResult>("/api/profile/tdee", { method: "POST", body: JSON.stringify(profile) })); }
-    catch (err) { setError(err instanceof Error ? err.message : "Không thể tính TDEE"); }
+    catch (err) { setError(toUserMessage(err, "Không thể tính TDEE.")); }
   }
 
   const numeric = (field: keyof UserProfile, value: string) => setProfile({ ...profile, [field]: value === "" ? null : Number(value) });

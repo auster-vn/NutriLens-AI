@@ -5,9 +5,9 @@ from secrets import compare_digest
 from app.auth.security import get_optional_user
 from app.core.config import get_settings
 from app.core.models import User
+from app.products.barcodes import BarcodeParseError, normalize_product_code
 from fastapi import Depends, Header, HTTPException, status
 
-BARCODE_PATTERN = re.compile(r"^[0-9]{8,14}$")
 SENSITIVE_PATTERNS = [
     re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.I),
     re.compile(r"\b(?:\+?\d[\d\s().-]{7,}\d)\b"),
@@ -15,11 +15,17 @@ SENSITIVE_PATTERNS = [
 ]
 
 
-def validate_barcode(barcode: str) -> str:
-    cleaned = barcode.strip()
-    if not BARCODE_PATTERN.fullmatch(cleaned):
-        raise HTTPException(status_code=422, detail="Barcode must contain 8 to 14 digits.")
-    return cleaned
+def validate_barcode(barcode: str, source_format: str | None = None) -> str:
+    try:
+        return normalize_product_code(barcode, source_format).gtin
+    except BarcodeParseError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "BARCODE_UNSUPPORTED",
+                "message": str(exc),
+            },
+        ) from exc
 
 
 def redact_sensitive_text(value: str) -> str:

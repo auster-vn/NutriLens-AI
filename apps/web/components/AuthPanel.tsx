@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FlaskConical, LogIn, UserPlus, Leaf, ShieldCheck, Zap } from "lucide-react";
 import { useAuth } from "./AuthProvider";
+import { toUserMessage } from "@/lib/api";
 
 export function AuthPanel() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export function AuthPanel() {
       else await register({ email, password, display_name: displayName });
       router.push("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Xác thực thất bại");
+      setError(toUserMessage(err, "Không thể xác thực. Vui lòng thử lại."));
     } finally {
       setLoading(false);
     }
@@ -36,7 +37,7 @@ export function AuthPanel() {
       await enterDemo();
       router.push("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Phiên demo thất bại");
+      setError(toUserMessage(err, "Không thể mở phiên demo. Vui lòng thử lại."));
     } finally {
       setLoading(false);
     }

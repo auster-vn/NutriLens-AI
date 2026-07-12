@@ -66,6 +66,38 @@ async def test_registration_creates_cookie_session_and_profile(isolated_app):
 
 
 @pytest.mark.asyncio
+async def test_auth_failures_return_stable_safe_error_codes(isolated_app):
+    client, _ = isolated_app
+    await _register(client, "auth-errors@example.com")
+    await client.post("/api/auth/logout")
+
+    invalid = await client.post(
+        "/api/auth/login",
+        json={"email": "auth-errors@example.com", "password": "wrong-password"},
+    )
+    assert invalid.status_code == 401
+    assert invalid.json()["detail"] == {
+        "code": "AUTH_INVALID_CREDENTIALS",
+        "message": "Invalid email or password.",
+    }
+
+    duplicate = await client.post(
+        "/api/auth/signup",
+        json={
+            "email": "auth-errors@example.com",
+            "display_name": "Duplicate User",
+            "password": "strong-password",
+        },
+    )
+    assert duplicate.status_code == 409
+    assert duplicate.json()["detail"]["code"] == "AUTH_EMAIL_EXISTS"
+
+    required = await client.get("/api/profile")
+    assert required.status_code == 401
+    assert required.json()["detail"]["code"] == "AUTH_REQUIRED"
+
+
+@pytest.mark.asyncio
 async def test_personal_data_is_isolated_and_dashboard_aggregates(isolated_app):
     first_client, session_factory = isolated_app
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as second_client:

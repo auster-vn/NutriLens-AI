@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AlertTriangle, PackageSearch, Soup, Target, WalletCards } from "lucide-react";
-import { apiFetch, type TdeeResult, type UserProfile } from "@/lib/api";
+import { apiFetch, toUserMessage, type TdeeResult, type UserProfile } from "@/lib/api";
 
 type PlannedMeal = { type: string; label: string; name: string; calories_kcal: number; protein_g: number; fiber_g: number; estimated_cost_vnd: number; reason: string; pantry_matches: string[] };
 type PlannedDay = { day: number; meals: PlannedMeal[] };
@@ -30,7 +30,7 @@ export function MealPlannerPanel() {
     setLoading(true); setError(null);
     try {
       setPlan(await apiFetch<MealPlan>("/api/meal-plan/generate", { method: "POST", body: JSON.stringify({ days, budget: budget || null, goal, diet, meals_per_day: 3, target_calories: targetCalories || null, excluded_ingredients: excluded.split(",").map((item) => item.trim()).filter(Boolean), available_items: availableItems }) }));
-    } catch (err) { setError(err instanceof Error ? err.message : "Không thể tạo kế hoạch"); }
+    } catch (err) { setError(toUserMessage(err, "Không thể tạo kế hoạch bữa ăn.")); }
     finally { setLoading(false); }
   }
 
@@ -38,7 +38,7 @@ export function MealPlannerPanel() {
     try {
       const rows = await apiFetch<Array<{ product_name?: string | null; barcode: string }>>("/api/pantry");
       setAvailableItems(rows.map((item) => item.product_name ?? item.barcode).slice(0, 12));
-    } catch (err) { setError(err instanceof Error ? err.message : "Không thể đọc pantry"); }
+    } catch (err) { setError(toUserMessage(err, "Không thể đọc dữ liệu tủ đồ.")); }
   }
 
   async function importTdeeTarget() {
@@ -53,7 +53,7 @@ export function MealPlannerPanel() {
       if (profile.goal) setGoal(profile.goal);
       if (profile.diet) setDiet(profile.diet);
       if (profile.budget_daily) setBudget(profile.budget_daily * days);
-    } catch (err) { setError(err instanceof Error ? err.message : "Không thể tính TDEE từ hồ sơ"); }
+    } catch (err) { setError(toUserMessage(err, "Không thể tính TDEE từ hồ sơ.")); }
   }
 
   return <div className="page animate-slide-up">

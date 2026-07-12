@@ -113,9 +113,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </header>
 
       <main className="shell">
-        {loading ? (
-          <div className="loading-state">Đang tải không gian làm việc…</div>
-        ) : null}
+        {loading && protectedRoute ? <WorkspaceSkeleton /> : null}
 
         {!loading && protectedRoute && !user ? (
           <section className="auth-gate animate-fade-in">
@@ -131,7 +129,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </section>
         ) : null}
 
-        {!loading && (!protectedRoute || user) ? children : null}
+        {(!protectedRoute || (!loading && user)) ? children : null}
       </main>
 
       <nav className="mobile-bottom-nav" aria-label="Điều hướng chính">
@@ -152,4 +150,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div> : null}
     </>
   );
+}
+
+function WorkspaceSkeleton() {
+  return <div className="page workspace-skeleton" aria-label="Đang tải dữ liệu tài khoản" aria-busy="true">
+    <div className="skeleton-line wide" />
+    <div className="skeleton-line medium" />
+    <section className="card skeleton-card"><div className="skeleton-line short" /><div className="skeleton-block" /></section>
+  </div>;
 }

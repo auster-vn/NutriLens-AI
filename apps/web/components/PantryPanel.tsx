@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Plus, Trash2, Package, RefreshCw } from "lucide-react";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, toUserMessage } from "@/lib/api";
 
 type PantryItem = {
   id: string;
@@ -69,7 +69,7 @@ export function PantryPanel() {
       });
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Thêm thất bại");
+      setError(toUserMessage(err, "Không thể thêm sản phẩm vào tủ đồ."));
     } finally {
       setAdding(false);
     }
@@ -81,7 +81,7 @@ export function PantryPanel() {
       await apiFetch<void>(`/api/pantry/${id}`, { method: "DELETE" });
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Xóa thất bại");
+      setError(toUserMessage(err, "Không thể xóa sản phẩm khỏi tủ đồ."));
     }
   }
 

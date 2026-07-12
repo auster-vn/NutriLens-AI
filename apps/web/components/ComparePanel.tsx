@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { GitCompare } from "lucide-react";
-import { apiFetch, defaultProfile, type ProductWithScore } from "@/lib/api";
+import { apiFetch, defaultProfile, toUserMessage, type ProductWithScore } from "@/lib/api";
 import { NutritionChart } from "./NutritionChart";
 import { ProductSummary } from "./ProductSummary";
 
@@ -40,7 +40,7 @@ export function ComparePanel() {
         body: JSON.stringify({ barcode_a: barcodeA, barcode_b: barcodeB, user_profile: { ...defaultProfile, goal } })
       }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Compare failed");
+      setError(toUserMessage(err, "Không thể so sánh sản phẩm."));
     } finally {
       setLoading(false);
     }

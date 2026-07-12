@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowRight, FlaskConical, ScanLine, TrendingUp, Shield, Zap } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, toUserMessage } from "@/lib/api";
 import { useAuth } from "./AuthProvider";
 
 type Dashboard = {
@@ -37,7 +37,7 @@ function ScoreClass(score: number | null | undefined) {
 }
 
 export function DashboardPanel() {
-  const { user, enterDemo } = useAuth();
+  const { user, loading, enterDemo } = useAuth();
   const [data, setData] = useState<Dashboard | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,9 +46,18 @@ export function DashboardPanel() {
     void apiFetch<Dashboard>("/api/dashboard")
       .then(setData)
       .catch((err) =>
-        setError(err instanceof Error ? err.message : "Dashboard failed")
+        setError(toUserMessage(err, "Không thể tải dữ liệu tổng quan."))
       );
   }, [user]);
+
+  if (loading) {
+    return <div className="page dashboard-page workspace-skeleton" aria-label="Đang tải tổng quan" aria-busy="true">
+      <div className="skeleton-line wide" />
+      <div className="skeleton-line medium" />
+      <section className="metric-grid skeleton-metrics">{Array.from({ length: 4 }, (_, index) => <div className="metric" key={index}><div className="skeleton-line short" /><div className="skeleton-line medium" /></div>)}</section>
+      <section className="dashboard-grid"><div className="card skeleton-block" /><div className="card skeleton-block" /></section>
+    </div>;
+  }
 
   /* ── Welcome / Hero ── */
   if (!user) {

@@ -48,7 +48,13 @@ async def register(
     email = str(request.email).lower()
     existing = await session.scalar(select(User).where(User.email == email))
     if existing:
-        raise HTTPException(status_code=409, detail="An account with this email already exists.")
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "AUTH_EMAIL_EXISTS",
+                "message": "An account with this email already exists.",
+            },
+        )
     user = User(
         email=email,
         display_name=request.display_name.strip(),
@@ -71,7 +77,10 @@ async def login(
     email = str(request.email).lower()
     user = await session.scalar(select(User).where(User.email == email))
     if user is None or not user.is_active or not verify_password(request.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Invalid email or password.")
+        raise HTTPException(
+            status_code=401,
+            detail={"code": "AUTH_INVALID_CREDENTIALS", "message": "Invalid email or password."},
+        )
     return _set_session_cookie(response, user)
 
 

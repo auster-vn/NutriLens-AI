@@ -6,6 +6,7 @@ import { Heart, PackagePlus, MessageSquare, GitCompare, CheckCircle } from "luci
 import {
   apiFetch,
   defaultProfile,
+  toUserMessage,
   type Product,
   type ProductScore,
   type ProductWithScore,
@@ -38,7 +39,7 @@ export function ProductDetailPanel({ barcode }: { barcode: string }) {
       });
       showFlash("Đã thêm vào tủ đồ");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Không thể thêm vào tủ đồ");
+      setError(toUserMessage(err, "Không thể thêm sản phẩm vào tủ đồ."));
     }
   }
 
@@ -49,7 +50,7 @@ export function ProductDetailPanel({ barcode }: { barcode: string }) {
       await apiFetch(`/api/favorites/${data.product.barcode}`, { method: "POST" });
       showFlash("Đã lưu vào yêu thích");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Không thể lưu yêu thích");
+      setError(toUserMessage(err, "Không thể lưu sản phẩm yêu thích."));
     }
   }
 
@@ -70,7 +71,7 @@ export function ProductDetailPanel({ barcode }: { barcode: string }) {
         });
         setData({ product, score });
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Tra cứu sản phẩm thất bại");
+        setError(toUserMessage(err, "Không thể tra cứu sản phẩm."));
       }
     }
     void load();

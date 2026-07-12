@@ -5,6 +5,7 @@ from time import perf_counter
 from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
@@ -66,9 +67,49 @@ app.add_middleware(
 )
 
 
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    request_id = getattr(request.state, "request_id", None)
+    logging.getLogger("nutrilens.validation").info(
+        "Request validation failed path=%s request_id=%s fields=%s",
+        request.url.path,
+        request_id,
+        [".".join(map(str, error.get("loc", []))) for error in exc.errors()],
+    )
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": exc.errors(),
+            "error": {"code": "VALIDATION_ERROR", "message": "Request validation failed."},
+        },
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    request_id = getattr(request.state, "request_id", None)
+    logging.getLogger("nutrilens.error").exception(
+        "Unhandled request error path=%s request_id=%s",
+        request.url.path,
+        request_id,
+        exc_info=exc,
+    )
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": {
+                "code": "INTERNAL_ERROR",
+                "message": "Hệ thống đang gặp sự cố. Vui lòng thử lại sau.",
+            }
+        },
+        headers={"X-Request-ID": request_id or "unknown"},
+    )
+
+
 @app.middleware("http")
 async def security_headers(request: Request, call_next) -> Response:
     request_id = request.headers.get("x-request-id") or str(uuid4())
+    request.state.request_id = request_id
     started_at = perf_counter()
     try:
         enforce_rate_limit(request)
